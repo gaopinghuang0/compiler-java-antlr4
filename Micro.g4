@@ -4,12 +4,11 @@ grammar Micro;
 program           : PROGRAM id BEGIN pgm_body END ;
 id                : IDENTIFIER;
 pgm_body          : decl func_declarations;
-decl		        : string_decl decl | var_decl decl | empty;
+decl		      : string_decl decl | var_decl decl | empty;
 
 /* Global String Declaration */
 string_decl       : STRING id ASSIGN str SEMI;
 str               : STRINGLITERAL;
-comment:    COMMENT;
 
 /* Variable Declaration */
 var_decl          : var_type id_list SEMI;
@@ -30,7 +29,7 @@ func_body         : decl stmt_list;
 
 /* Statement List */
 stmt_list         : stmt stmt_list | empty;
-stmt              : base_stmt | if_stmt | for_stmt | comment;
+stmt              : base_stmt | if_stmt | for_stmt | COMMENT;
 base_stmt         : assign_stmt | read_stmt | write_stmt | return_stmt;
 
 /* Basic Statements */

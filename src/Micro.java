@@ -11,6 +11,8 @@ public class Micro {
             ANTLRFileStream input = new ANTLRFileStream(filename);
             MicroLexer lexer = new MicroLexer(input);
             MicroParser parser = new MicroParser(new CommonTokenStream(lexer));
+            ANTLRErrorStrategy es = new CustomErrorStrategy();
+            parser.setErrorHandler(es);
             parser.program();
         }
     }
