@@ -1,4 +1,4 @@
-grammar Micro
+grammar Micro;
 /* PROGRAM */
 /* Program */
 program           : PROGRAM id BEGIN pgm_body END ;
@@ -98,25 +98,6 @@ STRING:'STRING';
 FLOAT:'FLOAT';
 
 
-
-
-//OPERATORS:':=' | '+' | '-' | '*' | '/' | '=' | '!=' | '<' | '>' | '(' | ')' | ';' | ',' | '<=' | '>=';
-
-//assign_op: OPERATORS;
-//add_g:OPERATORS;
-//sub_g:OPERATORS;
-//mul_g:OPERATORS;
-//div_g:OPERATORS;
-//eq_g:OPERATORS;
-//not_eq_g:OPERATORS;
-//less_g:OPERATORS;
-//more_g:OPERATORS;
-//l_par_g:OPERATORS;
-//r_par_g:OPERATORS;
-//semi_g:OPERATORS;
-//comma_g:OPERATORS;
-//less_eq_g:OPERATORS;
-//more_eq_g:OPERATORS;
 ASSIGN: ':=';
 ADD:'+';
 SUB:'-';
@@ -133,55 +114,11 @@ COMMA:',';
 LE:'<=';
 GE:'>=';
 
-
-//add_g:'+';
-//sub_g:'-';
-//mul_g:'*';
-//div_g:'/';
-//eq_g:'=';
-//not_eq_g:'!=';
-//less_g:'<';
-//more_g:'>';
-//l_par_g:'(';
-//r_par_g:')';
-//semi_g:';';
-//comma_g:',';
-//less_eq_g:'<=';
-//more_eq_g:'>=';
-//KEYWORD:'';
-//KEYWORD: 'PROGRAM'|'BEGIN'|'END'|'FUNCTION'|'READ'|'WRITE'|'IF'|'ELSE'|'FI'|'FOR'|'ROF'|'CONTINUE'|'BREAK'|'RETURN'|'INT'|'VOID'|'STRING'|'FLOAT' ;
-//KEYWORD: PROGRAM | BEGIN | END | FUNCTION | READ | WRITE | IF | ELSE | FI | FOR | CONTINUE | BREAK | RETURN | INT | VOID | STRING | FLOAT;
 IDENTIFIER: [a-zA-Z][a-zA-Z0-9]*;
 INTLITERAL: [0-9]+;
 FLOATLITERAL: [0-9]+.[0-9]+;
-//STRINGLITERAL: (~'"') | '"'('a'..'z' | 'A'..'Z')*'"';
-//STRINGLITERAL:'"' ('a'..'z'|'A'..'Z'|'\n'|'\t'|'\\'|EOF|'\r'|OPERATORS )+'"';
 STRINGLITERAL:'"'~["]*'"';
-//COMMENT:(('--')('a'..'z' | 'A'..'Z')* '--') | (('--')('a'..'z' | 'A'..'Z')*);
 COMMENT: '--'~[\r\n]* -> skip;
 
-
-//
-//PROGRAM:'PROGRAM';
-//BEGIN:'BEGIN';
-//END:'END';
-//FUNCTION:'FUNCTION';
-//READ:'READ';
-//WRITE:'WRITE';
-//IF:'IF';
-//ELSE:'ELSE';
-//FI:'FI';
-//FOR:'FOR';
-//ROF:'ROF';
-//CONTINUE:'CONTINUE';
-//BREAK:'BREAK';
-//RETURN: 'RETURN';
-//INT:'INT';
-//VOID:'VOID';
-//STRING:'STRING';
-//FLOAT:'FLOAT';
-
-
 WS : [ \t\r\n]+ -> skip ; // skip spaces, tabs, newlines
-//WS : ( ' ' | '\t' | '\r' | '\n' )+ { $channel = HIDDEN; };
 
