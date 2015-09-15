@@ -1,4 +1,4 @@
-ar scanner;
+grammar Micro
 /* PROGRAM */
 /* Program */
 program           : PROGRAM id BEGIN pgm_body END ;
