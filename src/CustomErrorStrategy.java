@@ -1,7 +1,5 @@
-import org.antlr.v4.runtime.DefaultErrorStrategy;
-import org.antlr.v4.runtime.NoViableAltException;
-import org.antlr.v4.runtime.Parser;
-import org.antlr.v4.runtime.RecognitionException;
+import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.misc.IntervalSet;
 
 /**
  * Created by hgp on 9/15/2015.
@@ -13,6 +11,12 @@ public class CustomErrorStrategy extends DefaultErrorStrategy {
         if(!this.inErrorRecoveryMode(recognizer)) {
             CheckValid cv = new CheckValid();
             cv.setErrorToken();
+        }
+    }
+
+    protected void reportUnwantedToken(Parser recognizer) {
+        if(!this.inErrorRecoveryMode(recognizer)) {
+           ;
         }
     }
 }
