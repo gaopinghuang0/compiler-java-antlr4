@@ -14,12 +14,16 @@ public class Micro {
             ANTLRErrorStrategy es = new CustomErrorStrategy();
             parser.setErrorHandler(es);
             parser.program();
-            CheckValid cv = new CheckValid();
-            if (cv.hasError()) {
-                System.out.println("Not accepted");
-            } else {
-                System.out.println("Accepted");
-            }
+            reportCheckValid();
+        }
+    }
+
+    public static void reportCheckValid() {
+        CheckValid cv = new CheckValid();
+        if (cv.hasError()) {
+            System.out.println("Not accepted");
+        } else {
+            System.out.println("Accepted");
         }
     }
 }

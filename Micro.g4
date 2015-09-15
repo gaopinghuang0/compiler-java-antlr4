@@ -75,7 +75,7 @@ aug_else_part     : ELSE decl aug_stmt_list | empty;
 
 
 
-empty: ;
+empty:;
 
 PROGRAM:'PROGRAM';
 BEGIN:'BEGIN';
