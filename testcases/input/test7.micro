@@ -4,6 +4,7 @@ BEGIN
     STRING input := "Please input an integer number: ";
     STRING space := " ";
     STRING eol := "\n";
+	INT i,result; 
 
     FUNCTION INT F (INT n)
     BEGIN

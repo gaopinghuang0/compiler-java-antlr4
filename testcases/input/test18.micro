@@ -12,7 +12,7 @@ BEGIN
      i := 10;
      j := 10;
 	
-    FOR(b := 1; b <= (i - 1); b := b + 1)            
+    FOR(b := 1; b < i; b := b + 1)            
         FOR (a := 1; a <= (j - 1); a := a + 1)
         ROF
     ROF

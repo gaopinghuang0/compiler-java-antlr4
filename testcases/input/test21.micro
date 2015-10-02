@@ -22,9 +22,11 @@ BEGIN
         dfx := 2.0*x1;
         x2 := x1 - fx/dfx;
         
-        FOR ( ; (x1 - x2) > error; )
+        FOR ( ; (x1 - x2) >= error; )
+            FLOAT x3;
             x1 := x2;
-            fx := x1*x1 - n;
+            x3 := x1*x1 - n;
+            fx := x3;
             dfx := 2.0*x1;
             x2 := x1 - fx/dfx;
         ROF

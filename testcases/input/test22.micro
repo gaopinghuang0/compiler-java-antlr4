@@ -7,18 +7,19 @@ BEGIN
      
 	FUNCTION VOID main()
 	BEGIN
-		
+        INT iprime;
 		iprime := 0;
 		result := 0;
 		
 		FOR ( i := 1; i < 100; i := i + 1)
-		     
+		     INT jprime;
 		     IF (i > 69)
 		          CONTINUE;
 		     FI
 		     iprime := iprime + 1;
 		     FOR(j := 0; j < 100; j := j + 1)
-		          IF (j > 49)
+                  jprime := j;
+		          IF (jprime > 49)
 		               BREAK;
 		          FI
 		          

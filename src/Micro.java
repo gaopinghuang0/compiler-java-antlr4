@@ -10,7 +10,8 @@ public class Micro {
             String filename = args[i];
             ANTLRFileStream input = new ANTLRFileStream(filename);
             MicroLexer lexer = new MicroLexer(input);
-            MicroParser parser = new MicroParser(new CommonTokenStream(lexer));
+            CommonTokenStream tokens = new CommonTokenStream(lexer);
+            MicroParser parser = new MicroParser(tokens);
             ANTLRErrorStrategy es = new CustomErrorStrategy();
             parser.setErrorHandler(es);
             parser.program();
