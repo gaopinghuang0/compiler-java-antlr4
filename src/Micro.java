@@ -2,6 +2,7 @@ import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.CommonTokenStream;
 
 import java.io.*;
+import java.util.Iterator;
 
 
 public class Micro {
@@ -12,19 +13,9 @@ public class Micro {
             MicroLexer lexer = new MicroLexer(input);
             CommonTokenStream tokens = new CommonTokenStream(lexer);
             MicroParser parser = new MicroParser(tokens);
-            ANTLRErrorStrategy es = new CustomErrorStrategy();
-            parser.setErrorHandler(es);
-            parser.program();
-            reportCheckValid();
-        }
-    }
-
-    public static void reportCheckValid() {
-        CheckValid cv = new CheckValid();
-        if (cv.hasError()) {
-            System.out.println("Not accepted");
-        } else {
-            System.out.println("Accepted");
+            CustomMicroVisitor cmv = new CustomMicroVisitor();
+            MicroParser.Pgm_bodyContext tree1 = parser.pgm_body();
+            cmv.visitPgm_body(tree1);
         }
     }
 }
