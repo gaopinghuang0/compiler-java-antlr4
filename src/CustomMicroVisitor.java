@@ -47,6 +47,7 @@ public class CustomMicroVisitor<T> extends MicroBaseVisitor<T>{
             // var_decl
             visitVarDeclHelper(tree.getChild(0));
         } else {
+            // string_decl
             visitStrDeclHelper(tree.getChild(0));
         }
     }
@@ -62,6 +63,8 @@ public class CustomMicroVisitor<T> extends MicroBaseVisitor<T>{
     }
 
     public void visitStrDeclHelper(ParseTree tree) {
-
+        String name = tree.getChild(1).getText();
+        String value = tree.getChild(3).getText();
+        System.out.println("name " + name + " type STRING value " + value);
     }
 }
