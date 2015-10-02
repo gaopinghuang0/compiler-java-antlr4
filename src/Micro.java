@@ -12,9 +12,7 @@ public class Micro {
             MicroLexer lexer = new MicroLexer(input);
             CommonTokenStream tokens = new CommonTokenStream(lexer);
             MicroParser parser = new MicroParser(tokens);
-            MicroParser.ProgramContext tree = parser.program();
-            CustomMicroVisitor cmv = new CustomMicroVisitor();
-            cmv.visitProgram(tree);
+            parser.program();
         }
     }
 }
