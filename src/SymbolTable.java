@@ -11,4 +11,5 @@ public interface SymbolTable {
     public void addChild(SymbolTable func);
     public void printTable();
     SymbolTable getParent();
+//    public SymbolTable clone();
 }

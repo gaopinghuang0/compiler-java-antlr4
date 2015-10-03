@@ -14,9 +14,7 @@ pgm_body returns [SymbolTable table]
     decl func_declarations {
        $table = currTable;
     };
-decl : string_decl decl
-    | var_decl decl
-    | /* empty */;
+decl : string_decl decl | var_decl decl | /* empty */;
 
 /* Global String Declaration */
 string_decl : STRING id ASSIGN str SEMI {
@@ -40,7 +38,9 @@ id_tail           : COMMA id id_tail   | /* empty */;
 
 /* Function Paramater List */
 param_decl_list   : param_decl param_decl_tail | /* empty */;
-param_decl        : var_type id;
+param_decl        : var_type id {
+        currTable.addElement(new SymbolEntry($id.text, $var_type.text));
+    };
 param_decl_tail   : COMMA param_decl param_decl_tail | /* empty */;
 
 /* Function Declarations */
