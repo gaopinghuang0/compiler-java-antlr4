@@ -12,7 +12,12 @@ public class Micro {
             MicroLexer lexer = new MicroLexer(input);
             CommonTokenStream tokens = new CommonTokenStream(lexer);
             MicroParser parser = new MicroParser(tokens);
-            parser.program();
+            SymbolTable table = parser.program().table;
+            table.printTable();
         }
+    }
+
+    private static void printSymbolTable(SymbolTable table) {
+        table.printTable();
     }
 }

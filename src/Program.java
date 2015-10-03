@@ -3,7 +3,7 @@ import java.util.ArrayList;
 /**
  * Created by hgp on 10/2/2015.
  */
-public class Program implements Scope {
+public class Program extends SymbolTable implements Scope {
     private String scope="GLOBAL";
     private Scope parent = null;
     private ArrayList<SymbolEntry> decls = new ArrayList<>();
@@ -28,5 +28,12 @@ public class Program implements Scope {
     @Override
     public Scope getParent() {
         return this.parent;
+    }
+
+    public void printTable() {
+        System.out.println("Symbol table "+scope);
+        for (SymbolEntry se : this.decls) {
+            System.out.println(se);
+        }
     }
 }

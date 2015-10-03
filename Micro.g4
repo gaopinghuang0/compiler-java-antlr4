@@ -1,21 +1,42 @@
 grammar Micro;
 
+@members {
+    SymbolTable currTable = null;
+    SymbolTableStack symbolStack = new SymbolTableStack();
+}
+
 /* Program */
-program           : PROGRAM id BEGIN pgm_body END ;
+program  returns [SymbolTable table]
+    : PROGRAM id BEGIN pgm_body END {$table = $pgm_body.table;};
 id                : IDENTIFIER;
-pgm_body          : decl func_declarations;
-decl		      : string_decl decl | var_decl decl | /* empty */;
+pgm_body returns [SymbolTable table]
+    : {currTable = new Program();}
+    decl func_declarations {
+       $table = currTable;
+    };
+decl : string_decl decl
+    | var_decl decl
+    | /* empty */;
 
 /* Global String Declaration */
-string_decl       : STRING id ASSIGN str SEMI;
+string_decl : STRING id ASSIGN str SEMI {
+        SymbolEntry entry = new SymbolEntry($id.text, "STRING", $str.text);
+        currTable.addElement(entry);
+    };
 str               : STRINGLITERAL;
 
 /* Variable Declaration */
-var_decl          : var_type id_list SEMI;
+var_decl
+    : var_type id_list SEMI {
+        String[] names = $id_list.text.split(",");
+        for (String name : names) {
+            currTable.addElement(new SymbolEntry(name, $var_type.text));
+        }
+    };
 var_type	      : FLOAT | INT;
 any_type          : var_type | VOID;
 id_list           : id id_tail;
-id_tail           : COMMA id id_tail | /* empty */;
+id_tail           : COMMA id id_tail   | /* empty */;
 
 /* Function Paramater List */
 param_decl_list   : param_decl param_decl_tail | /* empty */;
