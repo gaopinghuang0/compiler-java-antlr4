@@ -1,5 +1,3 @@
-import antlr.RecognitionException;
-
 import java.util.ArrayList;
 
 /**
@@ -22,8 +20,8 @@ public class Program implements SymbolTable {
     public void setScope(String Scope){ this.scope = scope; };
 
     public void addElement(SymbolEntry e) {
-        if (isContained(decls, e)) {
-            System.err.println("DECLARATION ERROR " + e.getName());
+        if (isContained(this.getDecls(), e)) {
+            System.out.println("DECLARATION ERROR " + e.getName());
             System.exit(1);
         } else {
             for (SymbolTable table = getParent(); table != null; table = table.getParent()) {
@@ -32,7 +30,7 @@ public class Program implements SymbolTable {
                 }
             }
         }
-        this.decls.add(e);
+        this.getDecls().add(e);
     }
 
     public boolean isContained(ArrayList<SymbolEntry> decls, SymbolEntry entry) {
@@ -60,22 +58,4 @@ public class Program implements SymbolTable {
         }
     }
 
-/*    public SymbolTable clone() {
-        Program temp;
-        try {
-            temp = (Program)super.clone();
-        } catch (CloneNotSupportedException var4) {
-            return this;
-        }
-
-        String scope = this.scope;
-        temp.scope = scope;
-        SymbolTable parent = this.getParent();
-        temp.parent = parent;
-        ArrayList<SymbolEntry> entries = this.decls;
-        temp.decls = entries;
-        ArrayList<SymbolTable> children = this.children;
-        temp.children = children;
-        return temp;
-    }*/
 }

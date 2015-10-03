@@ -33,20 +33,6 @@ public class Block extends Program implements SymbolTable {
         return this.parent;
     }
 
-    public void addElement(SymbolEntry e) {
-        if (isContained(decls, e)) {
-            System.err.println("DECLARATION ERROR " + e.getName());
-            System.exit(1);
-        } else {
-            for (SymbolTable table = getParent(); table != null; table = table.getParent()) {
-                if (isContained(table.getDecls(), e)) {
-                    System.out.println("SHADOW WARNING " + e.getName());
-                }
-            }
-        }
-        this.decls.add(e);
-    }
-
     public void addChild(SymbolTable func) {
         this.children.add(func);
     }
