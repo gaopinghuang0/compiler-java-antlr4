@@ -3,14 +3,17 @@ import java.util.ArrayList;
 /**
  * Created by hgp on 10/2/2015.
  */
-public class Function implements SymbolTable {
+public class Block implements SymbolTable {
     private String scope="";
     private SymbolTable parent = null;
     private ArrayList<SymbolEntry> decls = new ArrayList<>();
     private ArrayList<SymbolTable> children = new ArrayList<>();
+    private static int count = 0;
 
-    public Function(SymbolTable parent) {
+    public Block(SymbolTable parent) {
         this.parent = parent;
+        this.scope = "BLOCK " + (++count);
+//        System.out.println(this.scope);
     }
 
     public void setScope(String scope) {

@@ -82,8 +82,22 @@ addop             : '+' | '-';
 mulop             : '*' | '/';
 
 /* Complex Statements and Condition */
-if_stmt           : IF LPAREN cond RPAREN decl stmt_list else_part FI;
-else_part         : ELSE decl stmt_list | /* empty */;
+if_stmt
+    : {
+        symbolStack.push(currTable);
+        currTable = new Block(currTable);
+    } IF LPAREN cond RPAREN decl stmt_list else_part FI {
+        currTable.getParent().addChild(currTable);
+        currTable = symbolStack.pop();
+    };
+else_part
+    : {
+        symbolStack.push(currTable);
+        currTable = new Block(currTable);
+    } ELSE decl stmt_list {
+        currTable.getParent().addChild(currTable);
+        currTable = symbolStack.pop();
+    }| /* empty */;
 cond              : expr compop expr;
 compop            : '<' | '>' | '=' | '!=' | '<=' | '>=';
 
@@ -92,7 +106,14 @@ incr_stmt         : assign_expr | /* empty */;
 
 
 /* ECE 573 students use this version of for_stmt */
-for_stmt       : FOR LPAREN init_stmt SEMI cond SEMI incr_stmt RPAREN decl aug_stmt_list ROF;
+for_stmt
+    : {
+        symbolStack.push(currTable);
+        currTable = new Block(currTable);
+    } FOR LPAREN init_stmt SEMI cond SEMI incr_stmt RPAREN decl aug_stmt_list ROF {
+       currTable.getParent().addChild(currTable);
+       currTable = symbolStack.pop();
+    };
 
 /* CONTINUE and BREAK statements. ECE 573 students only */
 aug_stmt_list     : aug_stmt aug_stmt_list | /* empty */;

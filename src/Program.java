@@ -47,7 +47,7 @@ public class Program implements SymbolTable {
         }
     }
 
-    public SymbolTable clone() {
+/*    public SymbolTable clone() {
         Program temp;
         try {
             temp = (Program)super.clone();
@@ -64,5 +64,5 @@ public class Program implements SymbolTable {
         ArrayList<SymbolTable> children = this.children;
         temp.children = children;
         return temp;
-    }
+    }*/
 }
