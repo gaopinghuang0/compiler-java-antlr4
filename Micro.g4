@@ -120,8 +120,22 @@ aug_stmt_list     : aug_stmt aug_stmt_list | /* empty */;
 aug_stmt          : base_stmt | aug_if_stmt | for_stmt | CONTINUE SEMI | BREAK SEMI;
 
 /* Augmented IF statements for ECE 573 students */
-aug_if_stmt       : IF LPAREN cond RPAREN decl aug_stmt_list aug_else_part FI;
-aug_else_part     : ELSE decl aug_stmt_list | /* empty */;
+aug_if_stmt
+    : {
+         symbolStack.push(currTable);
+         currTable = new Block(currTable);
+    } IF LPAREN cond RPAREN decl aug_stmt_list aug_else_part FI {
+        currTable.getParent().addChild(currTable);
+        currTable = symbolStack.pop();
+    };
+aug_else_part
+    : {
+         symbolStack.push(currTable);
+         currTable = new Block(currTable); 
+    } ELSE decl aug_stmt_list {
+        currTable.getParent().addChild(currTable);
+        currTable = symbolStack.pop();
+    }| /* empty */;
 
 
 
