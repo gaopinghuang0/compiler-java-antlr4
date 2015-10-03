@@ -3,17 +3,17 @@ import java.util.ArrayList;
 /**
  * Created by hgp on 10/2/2015.
  */
-public class Program extends SymbolTable implements Scope {
+public class Program implements SymbolTable {
     private String scope="GLOBAL";
-    private Scope parent = null;
+    private SymbolTable parent = null;
     private ArrayList<SymbolEntry> decls = new ArrayList<>();
-    private ArrayList<Scope> children = new ArrayList<>();
+    private ArrayList<SymbolTable> children = new ArrayList<>();
 
     public ArrayList<SymbolEntry> getDecls() {
         return decls;
     }
 
-    public ArrayList<Scope> getChildren() {
+    public ArrayList<SymbolTable> getChildren() {
         return children;
     }
 
@@ -21,12 +21,12 @@ public class Program extends SymbolTable implements Scope {
         this.decls.add(e);
     }
 
-    public void addChild(Scope func) {
+    public void addChild(SymbolTable func) {
         this.children.add(func);
     }
 
     @Override
-    public Scope getParent() {
+    public SymbolTable getParent() {
         return this.parent;
     }
 
