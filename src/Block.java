@@ -3,7 +3,7 @@ import java.util.ArrayList;
 /**
  * Created by hgp on 10/2/2015.
  */
-public class Block implements SymbolTable {
+public class Block extends Program implements SymbolTable {
     private String scope="";
     private SymbolTable parent = null;
     private ArrayList<SymbolEntry> decls = new ArrayList<>();
@@ -34,12 +34,12 @@ public class Block implements SymbolTable {
     }
 
     public void addElement(SymbolEntry e) {
-        if (decls.contains(e)) {
-            System.out.println("DECLARATION ERROR "+ e.getName());
-            return;
+        if (isContained(decls, e)) {
+            System.err.println("DECLARATION ERROR " + e.getName());
+            System.exit(1);
         } else {
             for (SymbolTable table = getParent(); table != null; table = table.getParent()) {
-                if (table.getDecls().contains(e)) {
+                if (isContained(table.getDecls(), e)) {
                     System.out.println("SHADOW WARNING " + e.getName());
                 }
             }

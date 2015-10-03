@@ -1,3 +1,5 @@
+import antlr.RecognitionException;
+
 import java.util.ArrayList;
 
 /**
@@ -16,19 +18,30 @@ public class Program implements SymbolTable {
     public ArrayList<SymbolTable> getChildren() {
         return children;
     }
+
     public void setScope(String Scope){ this.scope = scope; };
+
     public void addElement(SymbolEntry e) {
-        if (decls.contains(e)) {
-            System.out.println("DECLARATION ERROR "+ e.getName());
-            return;
+        if (isContained(decls, e)) {
+            System.err.println("DECLARATION ERROR " + e.getName());
+            System.exit(1);
         } else {
             for (SymbolTable table = getParent(); table != null; table = table.getParent()) {
-                if (table.getDecls().contains(e)) {
+                if (isContained(table.getDecls(), e)) {
                     System.out.println("SHADOW WARNING " + e.getName());
                 }
             }
         }
         this.decls.add(e);
+    }
+
+    public boolean isContained(ArrayList<SymbolEntry> decls, SymbolEntry entry) {
+        for (SymbolEntry d : decls) {
+            if (d.getName().equals(entry.getName()) && d.getType().equals(entry.getType())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void addChild(SymbolTable func) {
