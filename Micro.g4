@@ -45,7 +45,15 @@ param_decl_tail   : COMMA param_decl param_decl_tail | /* empty */;
 
 /* Function Declarations */
 func_declarations : func_decl func_declarations | /* empty */;
-func_decl         : FUNCTION any_type id LPAREN param_decl_list RPAREN BEGIN func_body END;
+func_decl
+    : {
+        symbolStack.push(currTable);
+        currTable = new Function(currTable);
+    } FUNCTION any_type id LPAREN param_decl_list RPAREN BEGIN func_body END {
+        currTable.setScope($id.text);
+        currTable.getParent().addChild(currTable);
+        currTable = symbolStack.pop();
+    };
 func_body         : decl stmt_list;
 
 /* Statement List */

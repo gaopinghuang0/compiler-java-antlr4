@@ -2,7 +2,6 @@ import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.CommonTokenStream;
 
 import java.io.*;
-import java.util.Iterator;
 
 public class Micro {
     public static void main(String[] args) throws IOException {
@@ -13,11 +12,15 @@ public class Micro {
             CommonTokenStream tokens = new CommonTokenStream(lexer);
             MicroParser parser = new MicroParser(tokens);
             SymbolTable table = parser.program().table;
-            table.printTable();
+            printSymbolTable(table);
         }
     }
 
     private static void printSymbolTable(SymbolTable table) {
         table.printTable();
+        for (SymbolTable st : table.getChildren()) {
+            System.out.println();
+            printSymbolTable(st);
+        }
     }
 }

@@ -3,11 +3,19 @@ import java.util.ArrayList;
 /**
  * Created by hgp on 10/2/2015.
  */
-public class Program implements SymbolTable {
-    private String scope="GLOBAL";
+public class Function implements SymbolTable {
+    private String scope="";
     private SymbolTable parent = null;
     private ArrayList<SymbolEntry> decls = new ArrayList<>();
     private ArrayList<SymbolTable> children = new ArrayList<>();
+
+    public Function(SymbolTable parent) {
+        this.parent = parent;
+    }
+
+    public void setScope(String scope) {
+        this.scope = scope;
+    }
 
     public ArrayList<SymbolEntry> getDecls() {
         return decls;
@@ -16,7 +24,7 @@ public class Program implements SymbolTable {
     public ArrayList<SymbolTable> getChildren() {
         return children;
     }
-    public void setScope(String Scope){ this.scope = scope; };
+
     public void addElement(SymbolEntry e) {
         if (decls.contains(e)) {
             System.out.println("DECLARATION ERROR "+ e.getName());

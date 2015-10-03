@@ -6,6 +6,10 @@ public class SymbolEntry {
     private String type = "";
     private String value = "";
 
+    public String getName() {
+        return name;
+    }
+
     public SymbolEntry(String name, String type) {
         this.name = name;
         this.type = type;
