@@ -17,16 +17,10 @@ public class Micro {
             MicroLexer lexer = new MicroLexer(input);
             CommonTokenStream tokens = new CommonTokenStream(lexer);
             MicroParser parser = new MicroParser(tokens);
-            SymbolTable table = parser.program().table;
-            printSymbolTable(table);
+            ReturnData data = parser.program().data;
+            data.getTable();
+            System.out.println(data.getCodeList());
         }
     }
 
-    private static void printSymbolTable(SymbolTable table) {
-        table.printTable();
-        for (SymbolTable st : table.getChildren()) {
-            System.out.println();
-            printSymbolTable(st);
-        }
-    }
 }

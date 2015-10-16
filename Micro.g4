@@ -1,13 +1,23 @@
 grammar Micro;
 
+@header {
+    import java.util.*;
+}
+
 @members {
     SymbolTable currTable = null;
     SymbolTableStack symbolStack = new SymbolTableStack();
+    ArrayList<Code> codeList = new ArrayList<>();
 }
 
 /* Program */
-program  returns [SymbolTable table]
-    : PROGRAM id BEGIN pgm_body END {$table = $pgm_body.table;};
+program  returns [ReturnData data]
+    : PROGRAM id BEGIN pgm_body END {
+        ReturnData data = new ReturnData();
+        data.setTable($pgm_body.table);
+        data.setCodeList(codeList);
+        $data = data;
+    };
 id                : IDENTIFIER;
 pgm_body returns [SymbolTable table]
     : {currTable = new Program();}
@@ -70,14 +80,31 @@ return_stmt       : RETURN expr SEMI;
 
 /* Expressions */
 expr              : expr_prefix factor;
-expr_prefix       : expr_prefix factor addop | /* empty */;
+expr_prefix
+    : expr_prefix factor addop {
+        System.out.println($factor.text);
+    }| /* empty */;
 factor            : factor_prefix postfix_expr;
-factor_prefix     : factor_prefix postfix_expr mulop | /* empty */;
-postfix_expr      : primary | call_expr;
+factor_prefix
+    : factor_prefix postfix_expr mulop {
+
+    }| /* empty */;
+postfix_expr
+    : primary {
+        System.out.println("primary:=  "+$primary.text);
+    }| call_expr;
 call_expr         : id LPAREN expr_list RPAREN;
 expr_list         : expr expr_list_tail | /* empty */;
 expr_list_tail    : COMMA expr expr_list_tail | /* empty */;
-primary           : LPAREN expr RPAREN | id | INTLITERAL | FLOATLITERAL;
+primary
+    : LPAREN expr RPAREN {
+    }
+    | id {
+    }
+    | INTLITERAL {
+    }
+    | FLOATLITERAL {
+    };
 addop             : '+' | '-';
 mulop             : '*' | '/';
 
@@ -131,7 +158,7 @@ aug_if_stmt
 aug_else_part
     : {
          symbolStack.push(currTable);
-         currTable = new Block(currTable); 
+         currTable = new Block(currTable);
     } ELSE decl aug_stmt_list {
         currTable.getParent().addChild(currTable);
         currTable = symbolStack.pop();
