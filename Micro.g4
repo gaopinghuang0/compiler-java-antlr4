@@ -8,6 +8,10 @@ grammar Micro;
     SymbolTable currTable = null;
     SymbolTableStack symbolStack = new SymbolTableStack();
     ArrayList<Code> codeList = new ArrayList<>();
+    Stack factorStack = new Stack();
+    Stack exprStack = new Stack();
+    Code currFactor = null;
+    Code currExpr = null;
 }
 
 /* Program */
@@ -103,46 +107,66 @@ expr  returns [Code code]
         } else {
             $code = f;
         }
+        /*Clear currExpr*/
+        currExpr = null;
     };
 expr_prefix  returns [Code code]
     : expr_prefix factor addop {
-        Code last = null;
-        String lastOp = null;
         String type = $factor.code.getType();
-
-        if (codeList.size() != 0) {
-            last = codeList.get(codeList.size()-1);
-            lastOp = last.getOpcode();
-        }
-        System.out.println("in expr_prefix    "+ last.getClass()+last.toIR()+lastOp);
-        if (last != null && lastOp != null && (lastOp.startsWith("MULT") || lastOp.startsWith("DIV"))) {
-                String op = "";
-                if ($addop.text.equals("+")) {
-                    if (type.equals("INT")) op = "ADDI";
-                    else op = "ADDF";
-                } else if ($addop.text.equals("-")) {
-                    if (type.equals("INT")) op = "SUBI";
-                    else op = "SUBF";
-                } else {
-                    System.out.println("unknown");
-                }
-            $code = new ThreeAddressCode(op, last.getResult(), $factor.code.getResult(), type);
-            codeList.add($code);
+        String op = "";
+        if ($addop.text.equals("+")) {
+            op = type.equals("INT") ? "ADDI" : "ADDF";
         } else {
-            System.out.println("I am here   "+$factor.text);
-            String op = "";
-            if ($addop.text.equals("+")) {
-                if (type.equals("INT")) op = "ADDI";
-                else op = "ADDF";
-            } else if ($addop.text.equals("-")) {
-                if (type.equals("INT")) op = "SUBI";
-                else op = "SUBF";
-            } else {
-                System.out.println("unknown");
-            }
-            $code = new OneAddressCode(op, $factor.code.getResult(), type);
-            System.out.println($code.getClass()+$code.toIR());
+            op = type.equals("INT") ? "SUBI" : "SUBF";
         }
+        if (currExpr != null) {
+            $code = new ThreeAddressCode(currExpr.getOpcode(), currExpr.getResult(),
+                    $factor.code.getResult(), type);
+            codeList.add($code);
+            /*Use the new result and update the currExpr*/
+            $code = new OneAddressCode(op, $code.getResult(), type);
+            currExpr = $code;
+        } else {
+            $code = new OneAddressCode(op, $factor.code.getResult(), type);
+            currExpr = $code;
+        }
+
+//        String lastOp = null;
+//        String type = $factor.code.getType();
+//
+//        if (codeList.size() != 0) {
+//            last = codeList.get(codeList.size()-1);
+//            lastOp = last.getOpcode();
+//        }
+//        System.out.println("in expr_prefix    "+ last.getClass()+last.toIR()+lastOp);
+//        if (last != null && lastOp != null && (lastOp.startsWith("MULT") || lastOp.startsWith("DIV"))) {
+//                String op = "";
+//                if ($addop.text.equals("+")) {
+//                    if (type.equals("INT")) op = "ADDI";
+//                    else op = "ADDF";
+//                } else if ($addop.text.equals("-")) {
+//                    if (type.equals("INT")) op = "SUBI";
+//                    else op = "SUBF";
+//                } else {
+//                    System.out.println("unknown");
+//                }
+//            $code = new ThreeAddressCode(op, last.getResult(), $factor.code.getResult(), type);
+//            codeList.add($code);
+//        } else {
+//            System.out.println("I am here   "+$factor.text);
+//            String op = "";
+//            if ($addop.text.equals("+")) {
+//                if (type.equals("INT")) op = "ADDI";
+//                else op = "ADDF";
+//            } else if ($addop.text.equals("-")) {
+//                if (type.equals("INT")) op = "SUBI";
+//                else op = "SUBF";
+//            } else {
+//                System.out.println("unknown");
+//            }
+//            $code = new OneAddressCode(op, $factor.code.getResult(), type);
+//            System.out.println($code.getClass()+$code.toIR());
+//        }
     }| /* empty */;
 factor  returns [Code code]
     : factor_prefix postfix_expr {
@@ -156,37 +180,57 @@ factor  returns [Code code]
         } else {
             $code = p;
         }
+        /*Clear currFactor*/
+        currFactor = null;
     };
 factor_prefix  returns [Code code]
     : factor_prefix postfix_expr mulop {
-        Code last = null;
-        String lastOp = null;
         String type = $postfix_expr.code.getType();
-
-        if (codeList.size() != 0) {
-            last = codeList.get(codeList.size()-1);
-            lastOp = last.getOpcode();
-        }
-        System.out.println(last.getClass()+last.toIR()+lastOp);
-
-        System.out.println($mulop.text);
-
-        if (last != null && lastOp != null && (lastOp.startsWith("MULT") || lastOp.startsWith("DIV"))) {
-            $code = new ThreeAddressCode(lastOp, last.getResult(), $postfix_expr.code.getResult(), type);
-            System.out.println($code.getClass()+$code.toIR());
-            codeList.add($code);
+        String op = "";
+        if ($mulop.text.equals("*")) {
+            op = type.equals("INT") ? "MULTI" : "MULTF";
         } else {
-            String op = "";
-            if ($mulop.text.equals("*")) {
-                if (type.equals("INT")) op = "MULTI";
-                else op = "MULTF";
-            } else {
-                if (type.equals("INT")) op = "DIVI";
-                else op = "DIVF";
-            }
-            $code = new OneAddressCode(op, $postfix_expr.code.getResult(), type);
-            System.out.println($code.getClass()+$code.toIR());
+            op = type.equals("INT") ? "DIVI" : "DIVF";
         }
+        if (currFactor != null) {
+            $code = new ThreeAddressCode(currFactor.getOpcode(), currFactor.getResult(),
+                    $postfix_expr.code.getResult(), type);
+            codeList.add($code);
+            /*Use the new result and update currFactor*/
+            $code = new OneAddressCode(op, $code.getResult(), type);
+            currFactor = $code;
+        } else {
+            $code = new OneAddressCode(op, $postfix_expr.code.getResult(), type);
+            currFactor = $code;
+        }
+//        Code last = null;
+//        String lastOp = null;
+//        String type = $postfix_expr.code.getType();
+//
+//        if (codeList.size() != 0) {
+//            last = codeList.get(codeList.size()-1);
+//            lastOp = last.getOpcode();
+//        }
+//        System.out.println(last.getClass()+last.toIR()+lastOp);
+//
+//        System.out.println($mulop.text);
+//
+//        if (last != null && lastOp != null && (lastOp.startsWith("MULT") || lastOp.startsWith("DIV"))) {
+//            $code = new ThreeAddressCode(lastOp, last.getResult(), $postfix_expr.code.getResult(), type);
+//            System.out.println($code.getClass()+$code.toIR());
+//            codeList.add($code);
+//        } else {
+//            String op = "";
+//            if ($mulop.text.equals("*")) {
+//                if (type.equals("INT")) op = "MULTI";
+//                else op = "MULTF";
+//            } else {
+//                if (type.equals("INT")) op = "DIVI";
+//                else op = "DIVF";
+//            }
+//            $code = new OneAddressCode(op, $postfix_expr.code.getResult(), type);
+//            System.out.println($code.getClass()+$code.toIR());
+//        }
 
     }| /* empty */;
 postfix_expr  returns [Code code]
