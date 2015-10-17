@@ -3,9 +3,6 @@
  */
 public interface Code {
     String toIR();
-
-    String toTinyCode();
-
     String getOpcode();
     String getResult();
     String getType();

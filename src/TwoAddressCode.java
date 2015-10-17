@@ -40,8 +40,4 @@ public class TwoAddressCode extends Node implements Code {
         return opcode + " " + op1 + " " + result;
     }
 
-    @Override
-    public String toTinyCode() {
-        return null;
-    }
 }

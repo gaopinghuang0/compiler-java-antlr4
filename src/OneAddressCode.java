@@ -34,9 +34,4 @@ public class OneAddressCode implements Code {
     public String toIR() {
         return opcode + " " + result;
     }
-
-    @Override
-    public String toTinyCode() {
-        return null;
-    }
 }

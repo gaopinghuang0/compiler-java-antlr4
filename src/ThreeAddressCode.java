@@ -33,8 +33,4 @@ public class ThreeAddressCode extends Node implements Code {
         return opcode + " " + op1 + " " + op2 + " " + result;
     }
 
-    @Override
-    public String toTinyCode() {
-        return null;
-    }
 }

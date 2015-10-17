@@ -52,9 +52,9 @@ public class Program implements SymbolTable {
     }
 
     public void printTable() {
-        System.out.println("Symbol table "+scope);
-        for (SymbolEntry se : this.decls) {
-            System.out.println(se);
+//        System.out.println("Symbol table "+scope);
+        for (SymbolEntry se : this.getDecls()) {
+            System.out.println("var " + se.getName());
         }
     }
 
