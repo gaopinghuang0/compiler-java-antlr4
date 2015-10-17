@@ -27,7 +27,7 @@ public class Micro {
     private static void printIR(ArrayList<Code> codeList) {
         System.out.println(";IR code");
         for (Code c : codeList) {
-            System.out.println(c.toIR());
+            System.out.println(";"+c.toIR());
         }
     }
 

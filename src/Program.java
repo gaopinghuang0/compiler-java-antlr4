@@ -58,4 +58,21 @@ public class Program implements SymbolTable {
         }
     }
 
+    @Override
+    public String lookUpType(String name) {
+        for (SymbolEntry se : this.getDecls()) {
+            if (se.getName().equals(name)) {
+                return se.getType();
+            }
+        }
+        for (SymbolTable table = getParent(); table != null; table = table.getParent()) {
+            for (SymbolEntry se : table.getDecls()) {
+                if (se.getName().equals(name)) {
+                    return se.getType();
+                }
+            }
+        }
+        System.out.println("Warning, cannot find its type");
+        return null;
+    }
 }

@@ -90,8 +90,26 @@ assign_expr       : id ASSIGN expr {
         Code code = new TwoAddressCode(opcode, $expr.code.getResult(), $id.text, type);
         codeList.add(code);
     };
-read_stmt         : READ LPAREN id_list RPAREN SEMI;
-write_stmt        : WRITE LPAREN id_list RPAREN SEMI;
+read_stmt
+    : READ LPAREN id_list RPAREN SEMI {
+       String[] names = $id_list.text.split(",");
+       for (String name : names) {
+           String type = currTable.lookUpType(name);
+           String op = type.equals("INT") ? "READI" : "READF";
+           Code c = new OneAddressCode(op, name, type);
+           codeList.add(c);
+       }
+    };
+write_stmt
+    : WRITE LPAREN id_list RPAREN SEMI {
+       String[] names = $id_list.text.split(",");
+       for (String name : names) {
+           String type = currTable.lookUpType(name);
+           String op = type.equals("INT") ? "WRITEI" : "WRITEF";
+           Code c = new OneAddressCode(op, name, type);
+           codeList.add(c);
+       }
+    };
 return_stmt       : RETURN expr SEMI;
 
 /* Expressions */
@@ -189,9 +207,9 @@ primary  returns [Code code]
         currExpr = (Code)exprStack.pop();
     }
     | id {
-        // TODO: look up type from currTable to it's parent
-        // type = currTable.lookup($id.text);
-        $code = new OneAddressCode($id.text, "INT");
+        // look up type from currTable to it's parent
+        String type = currTable.lookUpType($id.text);
+        $code = new OneAddressCode($id.text, type);
     }
     | INTLITERAL {
         $code = new TwoAddressCode("STOREI", $INTLITERAL.text, "INT");

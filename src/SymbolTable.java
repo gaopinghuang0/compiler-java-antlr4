@@ -11,4 +11,5 @@ public interface SymbolTable {
     void addChild(SymbolTable func);
     void printTable();
     SymbolTable getParent();
+    String lookUpType(String name);
 }
