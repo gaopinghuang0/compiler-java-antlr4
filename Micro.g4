@@ -93,12 +93,56 @@ return_stmt       : RETURN expr SEMI;
 /* Expressions */
 expr  returns [Code code]
     : expr_prefix factor {
-        $code = $factor.code;
+        Code e = $expr_prefix.code;
+        Code f = $factor.code;
+        String type = f.getType();
+        if (e != null && type != null) {
+            String op = e.getOpcode();
+            $code = new ThreeAddressCode(op, e.getResult(), f.getResult(), type);
+            codeList.add($code);
+        } else {
+            $code = f;
+        }
     };
 expr_prefix  returns [Code code]
     : expr_prefix factor addop {
-//        System.out.println($factor.text);
-        $code = $factor.code;
+        Code last = null;
+        String lastOp = null;
+        String type = $factor.code.getType();
+
+        if (codeList.size() != 0) {
+            last = codeList.get(codeList.size()-1);
+            lastOp = last.getOpcode();
+        }
+        System.out.println("in expr_prefix    "+ last.getClass()+last.toIR()+lastOp);
+        if (last != null && lastOp != null && (lastOp.startsWith("MULT") || lastOp.startsWith("DIV"))) {
+                String op = "";
+                if ($addop.text.equals("+")) {
+                    if (type.equals("INT")) op = "ADDI";
+                    else op = "ADDF";
+                } else if ($addop.text.equals("-")) {
+                    if (type.equals("INT")) op = "SUBI";
+                    else op = "SUBF";
+                } else {
+                    System.out.println("unknown");
+                }
+            $code = new ThreeAddressCode(op, last.getResult(), $factor.code.getResult(), type);
+            codeList.add($code);
+        } else {
+            System.out.println("I am here   "+$factor.text);
+            String op = "";
+            if ($addop.text.equals("+")) {
+                if (type.equals("INT")) op = "ADDI";
+                else op = "ADDF";
+            } else if ($addop.text.equals("-")) {
+                if (type.equals("INT")) op = "SUBI";
+                else op = "SUBF";
+            } else {
+                System.out.println("unknown");
+            }
+            $code = new OneAddressCode(op, $factor.code.getResult(), type);
+            System.out.println($code.getClass()+$code.toIR());
+        }
     }| /* empty */;
 factor  returns [Code code]
     : factor_prefix postfix_expr {
@@ -124,29 +168,13 @@ factor_prefix  returns [Code code]
             lastOp = last.getOpcode();
         }
         System.out.println(last.getClass()+last.toIR()+lastOp);
-        if (last != null && lastOp != null && (lastOp.startsWith("MULT") || lastOp.startsWith("DIV"))) {
-//            System.out.println("prefix"+type);
-////            System.out.println(last.getResult()+lastOp);
-//            String op = "";
-//
-//
-//
-//            if (lastOp.equals("*")) {
-//                if (type.equals("INT")) op = "MULTI";
-//                else op = "MULTF";
-//            } else {
-//                if (type.equals("INT")) op = "DIVI";
-//                else op = "DIVF";
-//            }
 
+        System.out.println($mulop.text);
+
+        if (last != null && lastOp != null && (lastOp.startsWith("MULT") || lastOp.startsWith("DIV"))) {
             $code = new ThreeAddressCode(lastOp, last.getResult(), $postfix_expr.code.getResult(), type);
+            System.out.println($code.getClass()+$code.toIR());
             codeList.add($code);
-//            System.out.println(last.getClass());
-            if (last instanceof OneAddressCode) {
-                // remove the first factor_prefix because it only contains one op
-                System.out.println("I am here");
-//                codeList.remove(codeList.size()-1);
-            }
         } else {
             String op = "";
             if ($mulop.text.equals("*")) {
@@ -156,8 +184,8 @@ factor_prefix  returns [Code code]
                 if (type.equals("INT")) op = "DIVI";
                 else op = "DIVF";
             }
-//            System.out.println(last.getClass()+last.toIR()+op);
             $code = new OneAddressCode(op, $postfix_expr.code.getResult(), type);
+            System.out.println($code.getClass()+$code.toIR());
         }
 
     }| /* empty */;
