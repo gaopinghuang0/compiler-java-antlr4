@@ -130,43 +130,6 @@ expr_prefix  returns [Code code]
             $code = new OneAddressCode(op, $factor.code.getResult(), type);
             currExpr = $code;
         }
-
-//        String lastOp = null;
-//        String type = $factor.code.getType();
-//
-//        if (codeList.size() != 0) {
-//            last = codeList.get(codeList.size()-1);
-//            lastOp = last.getOpcode();
-//        }
-//        System.out.println("in expr_prefix    "+ last.getClass()+last.toIR()+lastOp);
-//        if (last != null && lastOp != null && (lastOp.startsWith("MULT") || lastOp.startsWith("DIV"))) {
-//                String op = "";
-//                if ($addop.text.equals("+")) {
-//                    if (type.equals("INT")) op = "ADDI";
-//                    else op = "ADDF";
-//                } else if ($addop.text.equals("-")) {
-//                    if (type.equals("INT")) op = "SUBI";
-//                    else op = "SUBF";
-//                } else {
-//                    System.out.println("unknown");
-//                }
-//            $code = new ThreeAddressCode(op, last.getResult(), $factor.code.getResult(), type);
-//            codeList.add($code);
-//        } else {
-//            System.out.println("I am here   "+$factor.text);
-//            String op = "";
-//            if ($addop.text.equals("+")) {
-//                if (type.equals("INT")) op = "ADDI";
-//                else op = "ADDF";
-//            } else if ($addop.text.equals("-")) {
-//                if (type.equals("INT")) op = "SUBI";
-//                else op = "SUBF";
-//            } else {
-//                System.out.println("unknown");
-//            }
-//            $code = new OneAddressCode(op, $factor.code.getResult(), type);
-//            System.out.println($code.getClass()+$code.toIR());
-//        }
     }| /* empty */;
 factor  returns [Code code]
     : factor_prefix postfix_expr {
@@ -203,35 +166,6 @@ factor_prefix  returns [Code code]
             $code = new OneAddressCode(op, $postfix_expr.code.getResult(), type);
             currFactor = $code;
         }
-//        Code last = null;
-//        String lastOp = null;
-//        String type = $postfix_expr.code.getType();
-//
-//        if (codeList.size() != 0) {
-//            last = codeList.get(codeList.size()-1);
-//            lastOp = last.getOpcode();
-//        }
-//        System.out.println(last.getClass()+last.toIR()+lastOp);
-//
-//        System.out.println($mulop.text);
-//
-//        if (last != null && lastOp != null && (lastOp.startsWith("MULT") || lastOp.startsWith("DIV"))) {
-//            $code = new ThreeAddressCode(lastOp, last.getResult(), $postfix_expr.code.getResult(), type);
-//            System.out.println($code.getClass()+$code.toIR());
-//            codeList.add($code);
-//        } else {
-//            String op = "";
-//            if ($mulop.text.equals("*")) {
-//                if (type.equals("INT")) op = "MULTI";
-//                else op = "MULTF";
-//            } else {
-//                if (type.equals("INT")) op = "DIVI";
-//                else op = "DIVF";
-//            }
-//            $code = new OneAddressCode(op, $postfix_expr.code.getResult(), type);
-//            System.out.println($code.getClass()+$code.toIR());
-//        }
-
     }| /* empty */;
 postfix_expr  returns [Code code]
     : primary {
@@ -244,8 +178,15 @@ call_expr         : id LPAREN expr_list RPAREN;
 expr_list         : expr expr_list_tail | /* empty */;
 expr_list_tail    : COMMA expr expr_list_tail | /* empty */;
 primary  returns [Code code]
-    : LPAREN expr RPAREN {
+    : LPAREN {
+        factorStack.push(currFactor);
+        exprStack.push(currExpr);
+        currFactor = null;
+        currExpr = null;
+    } expr RPAREN {
         $code = $expr.code;
+        currFactor = (Code)factorStack.pop();
+        currExpr = (Code)exprStack.pop();
     }
     | id {
         // TODO: look up type from currTable to it's parent

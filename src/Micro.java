@@ -19,8 +19,8 @@ public class Micro {
             CommonTokenStream tokens = new CommonTokenStream(lexer);
             MicroParser parser = new MicroParser(tokens);
             ReturnData data = parser.program().data;
-            printSymbolTable(data.getTable());
-//            printIR(data.getCodeList());
+//            printSymbolTable(data.getTable());
+            printIR(data.getCodeList());
         }
     }
 
