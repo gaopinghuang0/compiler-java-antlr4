@@ -73,37 +73,120 @@ base_stmt         : assign_stmt | read_stmt | write_stmt | return_stmt;
 
 /* Basic Statements */
 assign_stmt       : assign_expr SEMI;
-assign_expr       : id ASSIGN expr ;
+assign_expr       : id ASSIGN expr {
+        String type = $expr.code.getType();
+        String opcode = "";
+        if (type != null && type.equals("INT")) {
+            opcode = "STOREI";
+        } else if (type != null && type.equals("FLOAT")) {
+            opcode = "STOREF";
+        } else {
+            System.out.println($expr.text);
+        }
+        Code code = new TwoAddressCode(opcode, $expr.code.getResult(), $id.text, type);
+        codeList.add(code);
+    };
 read_stmt         : READ LPAREN id_list RPAREN SEMI;
 write_stmt        : WRITE LPAREN id_list RPAREN SEMI;
 return_stmt       : RETURN expr SEMI;
 
 /* Expressions */
-expr              : expr_prefix factor;
-expr_prefix
+expr  returns [Code code]
+    : expr_prefix factor {
+        $code = $factor.code;
+    };
+expr_prefix  returns [Code code]
     : expr_prefix factor addop {
-        System.out.println($factor.text);
+//        System.out.println($factor.text);
+        $code = $factor.code;
     }| /* empty */;
-factor            : factor_prefix postfix_expr;
-factor_prefix
+factor  returns [Code code]
+    : factor_prefix postfix_expr {
+        Code f = $factor_prefix.code;
+        Code p = $postfix_expr.code;
+        String type = p.getType();
+        if (f != null && type != null) {
+            String op = f.getOpcode();
+            $code = new ThreeAddressCode(op, f.getResult(), p.getResult(), type);
+            codeList.add($code);
+        } else {
+            $code = p;
+        }
+    };
+factor_prefix  returns [Code code]
     : factor_prefix postfix_expr mulop {
+        Code last = null;
+        String lastOp = null;
+        String type = $postfix_expr.code.getType();
+
+        if (codeList.size() != 0) {
+            last = codeList.get(codeList.size()-1);
+            lastOp = last.getOpcode();
+        }
+        System.out.println(last.getClass()+last.toIR()+lastOp);
+        if (last != null && lastOp != null && (lastOp.startsWith("MULT") || lastOp.startsWith("DIV"))) {
+//            System.out.println("prefix"+type);
+////            System.out.println(last.getResult()+lastOp);
+//            String op = "";
+//
+//
+//
+//            if (lastOp.equals("*")) {
+//                if (type.equals("INT")) op = "MULTI";
+//                else op = "MULTF";
+//            } else {
+//                if (type.equals("INT")) op = "DIVI";
+//                else op = "DIVF";
+//            }
+
+            $code = new ThreeAddressCode(lastOp, last.getResult(), $postfix_expr.code.getResult(), type);
+            codeList.add($code);
+//            System.out.println(last.getClass());
+            if (last instanceof OneAddressCode) {
+                // remove the first factor_prefix because it only contains one op
+                System.out.println("I am here");
+//                codeList.remove(codeList.size()-1);
+            }
+        } else {
+            String op = "";
+            if ($mulop.text.equals("*")) {
+                if (type.equals("INT")) op = "MULTI";
+                else op = "MULTF";
+            } else {
+                if (type.equals("INT")) op = "DIVI";
+                else op = "DIVF";
+            }
+//            System.out.println(last.getClass()+last.toIR()+op);
+            $code = new OneAddressCode(op, $postfix_expr.code.getResult(), type);
+        }
 
     }| /* empty */;
-postfix_expr
+postfix_expr  returns [Code code]
     : primary {
-        System.out.println("primary:=  "+$primary.text);
-    }| call_expr;
+        $code = $primary.code;
+    }
+    | call_expr {
+    //TODO: in next step
+    };
 call_expr         : id LPAREN expr_list RPAREN;
 expr_list         : expr expr_list_tail | /* empty */;
 expr_list_tail    : COMMA expr expr_list_tail | /* empty */;
-primary
+primary  returns [Code code]
     : LPAREN expr RPAREN {
+        $code = $expr.code;
     }
     | id {
+        // TODO: look up type from currTable to it's parent
+        // type = currTable.lookup($id.text);
+        $code = new OneAddressCode($id.text, "INT");
     }
     | INTLITERAL {
+        $code = new TwoAddressCode("STOREI", $INTLITERAL.text, "INT");
+        codeList.add($code);
     }
     | FLOATLITERAL {
+        $code = new TwoAddressCode("STOREF", $FLOATLITERAL.text, "FLOAT");
+        codeList.add($code);
     };
 addop             : '+' | '-';
 mulop             : '*' | '/';

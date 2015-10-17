@@ -2,6 +2,7 @@ import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.CommonTokenStream;
 
 import java.io.*;
+import java.util.*;
 
 public class Micro {
     public static void main(String[] args) throws IOException {
@@ -19,8 +20,14 @@ public class Micro {
             MicroParser parser = new MicroParser(tokens);
             ReturnData data = parser.program().data;
             data.getTable();
-            System.out.println(data.getCodeList());
+            printIR(data.getCodeList());
         }
     }
 
+    private static void printIR(ArrayList<Code> codeList) {
+        System.out.println(";IR code");
+        for (Code c : codeList) {
+            System.out.println(c.toIR());
+        }
+    }
 }

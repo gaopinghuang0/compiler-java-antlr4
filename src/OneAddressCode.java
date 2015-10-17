@@ -1,18 +1,38 @@
 /**
  * Created by hgp on 10/16/2015.
  */
-public class OneAddressCode implements Code{
+public class OneAddressCode implements Code {
     private String opcode;
-    private String op1;
+    private String result;
+    private String type;
 
-    public OneAddressCode(String opcode, String op1) {
+    public OneAddressCode(String result, String type) {
+        this.result = result;
+        this.opcode = null;
+        this.type = type;
+    }
+
+    public OneAddressCode(String opcode, String result, String type) {
         this.opcode = opcode;
-        this.op1 = op1;
+        this.result = result;
+        this.type = type;
+    }
+
+    public String getOpcode() {
+        return opcode;
+    }
+
+    public String getResult() {
+        return result;
+    }
+
+    public String getType() {
+        return type;
     }
 
     @Override
     public String toIR() {
-        return opcode + " " + op1;
+        return opcode + " " + result;
     }
 
     @Override

@@ -2,7 +2,11 @@
  * Created by hgp on 10/16/2015.
  */
 public interface Code {
-    public String toIR();
+    String toIR();
 
-    public String toTinyCode();
+    String toTinyCode();
+
+    String getOpcode();
+    String getResult();
+    String getType();
 }
