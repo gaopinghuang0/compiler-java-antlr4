@@ -22,6 +22,8 @@ public class TwoAddressCode extends Node implements Code {
         this.result = result;
         this.type = type;
     }
+    public String getOp1(){return op1;}
+    public String getOp2(){return null;}
 
     public String getOpcode() {
         return opcode;

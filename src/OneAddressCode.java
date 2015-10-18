@@ -17,7 +17,8 @@ public class OneAddressCode implements Code {
         this.result = result;
         this.type = type;
     }
-
+    public String getOp1(){return null;}
+    public String getOp2(){return null;}
     public String getOpcode() {
         return opcode;
     }

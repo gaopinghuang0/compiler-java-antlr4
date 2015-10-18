@@ -6,4 +6,6 @@ public interface Code {
     String getOpcode();
     String getResult();
     String getType();
+    String getOp1();
+    String getOp2();
 }
