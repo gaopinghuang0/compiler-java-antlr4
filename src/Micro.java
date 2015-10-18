@@ -55,7 +55,7 @@ public class Micro {
                 }
                 else if (c.getOp1().startsWith("$T")){
                     //System.out.println(c.getOp1());
-                    System.out.println(c.getOp1());
+//                    System.out.println(c.getOp1());
                     System.out.println("move " +checkdollar(Register_list,c.getOp1())+" "+c.getResult());
                 }
 
@@ -87,7 +87,11 @@ public class Micro {
                     // muli $T0 a
                     if(c.getOp2().startsWith("$T") == false){
                         System.out.println("muli " + c.getOp2() + " "+ checkdollar(Register_list,c.getOp1()));
-                        register.add(c.getResult());
+                        //register.add(c.getResult());
+                        String prev_reg = checkdollar(Register_list,c.getOp1());
+                        int reg_count = Integer.parseInt(prev_reg.replace("r",""));
+                        Register test_reg = new Register(reg_count,c.getResult());
+                        Register_list.add(test_reg);
                     }
                     // muli $T0 $T1
                     else {
@@ -106,7 +110,7 @@ public class Micro {
                     System.out.println("move "+ c.getOp1() + " " + register.toStirng());
                     // a b
                     if (c.getOp2().startsWith("$T") == false){
-                        System.out.println("addi "+ c.getOp2()+" "+ register.toStirng());
+//                        System.out.println("addi "+ c.getOp2()+" "+ register.toStirng());
                         register.add(c.getResult());
                     }
                     // addi a $T0
@@ -123,16 +127,19 @@ public class Micro {
                     // addi $T0 a
                     if(c.getOp2().startsWith("$T") == false){
 //                        System.out.println(c.getResult());
-                        System.out.println("addi " + c.getOp2() + " "+ checkdollar(Register_list,c.getOp1()));
-
-                        register.add(c.getResult());
+                        System.out.println("addi " + c.getOp2() + " " + checkdollar(Register_list, c.getOp1()));
+                        String prev_reg = checkdollar(Register_list,c.getOp1());
+                        int reg_count = Integer.parseInt(prev_reg.replace("r", ""));
+                        Register test_reg = new Register(reg_count,c.getResult());
+                        Register_list.add(test_reg);
+                        //register.add(c.getResult());
                     }
                     // addi $T0 $T1
                     else {
                         System.out.println(c.getOp1());
                         System.out.println(c.getOp2());
                         System.out.println(c.getResult());
-                        System.out.println(register.getlist());
+//                        System.out.println(register.getlist());
                         System.out.println("addi " + checkdollar(Register_list, c.getOp2()) + " " + checkdollar(Register_list, c.getOp1()));
                         register.add(c.getResult());
                     }
@@ -166,7 +173,11 @@ public class Micro {
 //                        System.out.println(c.getOp1());
 //                        System.out.println("round" + register_count);
                         System.out.println("divi " + c.getOp2() + " "+ checkdollar(Register_list,c.getOp1()));
-                        register.add(c.getResult());
+                        //register.add(c.getResult());
+                        String prev_reg = checkdollar(Register_list,c.getOp1());
+                        int reg_count = Integer.parseInt(prev_reg.replace("r",""));
+                        Register test_reg = new Register(reg_count,c.getResult());
+                        Register_list.add(test_reg);
                     }
                     // divi $T0 $T1
                     else {
