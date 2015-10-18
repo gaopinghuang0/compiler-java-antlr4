@@ -8,10 +8,6 @@ grammar Micro;
     SymbolTable currTable = null;
     SymbolTableStack symbolStack = new SymbolTableStack();
     ArrayList<Code> codeList = new ArrayList<>();
-    Stack factorStack = new Stack();
-    Stack exprStack = new Stack();
-    Code currFactor = null;
-    Code currExpr = null;
 }
 
 /* Program */
@@ -125,11 +121,9 @@ expr  returns [Code code]
         } else {
             $code = f;
         }
-        /*Clear currExpr*/
-        currExpr = null;
     };
 expr_prefix  returns [Code code]
-    : expr_prefix factor addop {
+    : ep=expr_prefix factor addop {
         String type = $factor.code.getType();
         String op = "";
         if ($addop.text.equals("+")) {
@@ -137,16 +131,13 @@ expr_prefix  returns [Code code]
         } else {
             op = type.equals("INT") ? "SUBI" : "SUBF";
         }
-        if (currExpr != null) {
-            $code = new ThreeAddressCode(currExpr.getOpcode(), currExpr.getResult(),
+        if ($ep.code != null) {
+            $code = new ThreeAddressCode($ep.code.getOpcode(), $ep.code.getResult(),
                     $factor.code.getResult(), type);
             codeList.add($code);
-            /*Use the new result and update the currExpr*/
             $code = new OneAddressCode(op, $code.getResult(), type);
-            currExpr = $code;
         } else {
             $code = new OneAddressCode(op, $factor.code.getResult(), type);
-            currExpr = $code;
         }
     }| /* empty */;
 factor  returns [Code code]
@@ -161,11 +152,9 @@ factor  returns [Code code]
         } else {
             $code = p;
         }
-        /*Clear currFactor*/
-        currFactor = null;
     };
 factor_prefix  returns [Code code]
-    : factor_prefix postfix_expr mulop {
+    : fp=factor_prefix postfix_expr mulop {
         String type = $postfix_expr.code.getType();
         String op = "";
         if ($mulop.text.equals("*")) {
@@ -173,16 +162,13 @@ factor_prefix  returns [Code code]
         } else {
             op = type.equals("INT") ? "DIVI" : "DIVF";
         }
-        if (currFactor != null) {
-            $code = new ThreeAddressCode(currFactor.getOpcode(), currFactor.getResult(),
+        if ($fp.code != null) {
+            $code = new ThreeAddressCode($fp.code.getOpcode(), $fp.code.getResult(),
                     $postfix_expr.code.getResult(), type);
             codeList.add($code);
-            /*Use the new result and update currFactor*/
             $code = new OneAddressCode(op, $code.getResult(), type);
-            currFactor = $code;
         } else {
             $code = new OneAddressCode(op, $postfix_expr.code.getResult(), type);
-            currFactor = $code;
         }
     }| /* empty */;
 postfix_expr  returns [Code code]
@@ -196,15 +182,8 @@ call_expr         : id LPAREN expr_list RPAREN;
 expr_list         : expr expr_list_tail | /* empty */;
 expr_list_tail    : COMMA expr expr_list_tail | /* empty */;
 primary  returns [Code code]
-    : LPAREN {
-        factorStack.push(currFactor);
-        exprStack.push(currExpr);
-        currFactor = null;
-        currExpr = null;
-    } expr RPAREN {
+    : LPAREN expr RPAREN {
         $code = $expr.code;
-        currFactor = (Code)factorStack.pop();
-        currExpr = (Code)exprStack.pop();
     }
     | id {
         // look up type from currTable to it's parent
