@@ -1,5 +1,6 @@
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.jcp.xml.dsig.internal.SignerOutputStream;
 
 import java.io.*;
 import java.lang.reflect.Array;
@@ -20,18 +21,18 @@ public class Micro {
             CommonTokenStream tokens = new CommonTokenStream(lexer);
             MicroParser parser = new MicroParser(tokens);
             ReturnData data = parser.program().data;
+
             printIR(data.getCodeList());
-            //System.out.println(data.getCodeList());
-            printTiny(data.getCodeList());
-           // printSymbolTable(data.getTable());
-            //Register test = new Register(1,"ab");
+            //printSymbolTable(data.getTable());
+            //printTiny(data.getCodeList());
+
 
 
         }
     }
     private static void printTiny(ArrayList<Code> codelist){
         int register_count = 0;
-        ArrayList<Register> Register_list = new ArrayList<>();
+        ArrayList<Register> registerList = new ArrayList<>();
         for (Code c: codelist){
             Register register = new Register(register_count,c.getResult());
             String opcode = c.getOpcode();
@@ -40,7 +41,7 @@ public class Micro {
                 System.out.println("sys writei "+c.getResult());
             }
             else if (opcode == "WRITEF"){
-                System.out.println("sys writef "+c.getResult());
+                System.out.println("sys writer "+c.getResult());
             }
             // Two address Code, register involves.
             else if (opcode == "STOREI" || opcode== "STOREF"){
@@ -49,20 +50,135 @@ public class Micro {
 
                     System.out.println("move " + c.getOp1() +" "+ register.toStirng());
                     register.add(c.getResult());
-                    Register_list.add(register);
+                    registerList.add(register);
                     register_count++;
 
                 }
                 else if (c.getOp1().startsWith("$T")){
-                    //System.out.println(c.getOp1());
-//                    System.out.println(c.getOp1());
-                    System.out.println("move " +checkdollar(Register_list,c.getOp1())+" "+c.getResult());
+                    System.out.println("move " +checkDollar(registerList, c.getOp1())+" "+c.getResult());
                 }
 
 
 
             }
             // Three address Code, more complicated. we have
+            else if (opcode == "MULTF"){
+
+                // muli a
+                if(c.getOp1().startsWith("$T") == false){
+                    System.out.println("move " + c.getOp1() + " " + register.toStirng());
+                    // a b
+                    if (c.getOp2().startsWith("$T") == false){
+                        System.out.println("mulr "+ c.getOp2()+" "+ register.toStirng());
+                        register.add(c.getResult());
+                    }
+                    // muli a $T0
+                    else{
+                        System.out.println("mulr " +checkDollar(registerList, c.getOp2()) +" "+ register.toStirng());
+                        register.add(c.getResult());
+                    }
+                    register_count ++;
+
+                }
+                // muli $T
+                else{
+                    // muli $T0 a
+                    if(c.getOp2().startsWith("$T") == false){
+                        System.out.println("mulr " + c.getOp2() + " "+ checkDollar(registerList, c.getOp1()));
+                        String prev_reg = checkDollar(registerList, c.getOp1());
+                        int reg_count = Integer.parseInt(prev_reg.replace("r",""));
+                        Register test_reg = new Register(reg_count,c.getResult());
+                        registerList.add(test_reg);
+                    }
+                    // muli $T0 $T1
+                    else {
+                        System.out.println("mulr " + checkDollar(registerList, c.getOp2()) + " " + checkDollar(registerList, c.getOp1()));
+                        String prev_reg = checkDollar(registerList, c.getOp1());
+                        int reg_count = Integer.parseInt(prev_reg.replace("r", ""));
+                        Register test_reg = new Register(reg_count,c.getResult());
+                        registerList.add(test_reg);
+                    }
+                }
+                registerList.add(register);
+            }
+            else if (opcode == "ADDF"){
+
+                // muli a
+                if(c.getOp1().startsWith("$T") == false){
+                    System.out.println("move " + c.getOp1() + " " + register.toStirng());
+                    // a b
+                    if (c.getOp2().startsWith("$T") == false){
+                        System.out.println("addr "+ c.getOp2()+" "+ register.toStirng());
+                        register.add(c.getResult());
+                    }
+                    // muli a $T0
+                    else{
+                        System.out.println("addr " +checkDollar(registerList, c.getOp2()) +" "+ register.toStirng());
+                        register.add(c.getResult());
+                    }
+                    register_count ++;
+
+                }
+                // muli $T
+                else{
+                    // muli $T0 a
+                    if(c.getOp2().startsWith("$T") == false){
+                        System.out.println("addr " + c.getOp2() + " "+ checkDollar(registerList, c.getOp1()));
+                        String prev_reg = checkDollar(registerList, c.getOp1());
+                        int reg_count = Integer.parseInt(prev_reg.replace("r",""));
+                        Register test_reg = new Register(reg_count,c.getResult());
+                        registerList.add(test_reg);
+                    }
+                    // muli $T0 $T1
+                    else {
+                        System.out.println("addr " + checkDollar(registerList, c.getOp2()) + " " + checkDollar(registerList, c.getOp1()));
+                        String prev_reg = checkDollar(registerList, c.getOp1());
+                        int reg_count = Integer.parseInt(prev_reg.replace("r", ""));
+                        Register test_reg = new Register(reg_count,c.getResult());
+                        registerList.add(test_reg);
+                    }
+                }
+                registerList.add(register);
+            }
+            else if (opcode == "SUBI"){
+
+                // muli a
+                if(c.getOp1().startsWith("$T") == false){
+                    System.out.println("move " + c.getOp1() + " " + register.toStirng());
+                    // a b
+                    if (c.getOp2().startsWith("$T") == false){
+                        System.out.println("subi "+ c.getOp2()+" "+ register.toStirng());
+                        register.add(c.getResult());
+                    }
+                    // muli a $T0
+                    else{
+                        System.out.println("subi " +checkDollar(registerList, c.getOp2()) +" "+ register.toStirng());
+                        register.add(c.getResult());
+                    }
+                    register_count ++;
+
+                }
+                // muli $T
+                else{
+                    // muli $T0 a
+                    if(c.getOp2().startsWith("$T") == false){
+                        System.out.println("subi " + c.getOp2() + " "+ checkDollar(registerList, c.getOp1()));
+                        String prev_reg = checkDollar(registerList, c.getOp1());
+                        int reg_count = Integer.parseInt(prev_reg.replace("r",""));
+                        Register test_reg = new Register(reg_count,c.getResult());
+                        registerList.add(test_reg);
+                    }
+                    // muli $T0 $T1
+                    else {
+                        System.out.println("subi " + checkDollar(registerList, c.getOp2()) + " " + checkDollar(registerList, c.getOp1()));
+                        String prev_reg = checkDollar(registerList, c.getOp1());
+                        int reg_count = Integer.parseInt(prev_reg.replace("r", ""));
+                        Register test_reg = new Register(reg_count,c.getResult());
+                        registerList.add(test_reg);
+                    }
+                }
+                registerList.add(register);
+            }
             else if (opcode == "MULTI"){
 
                 // muli a
@@ -75,8 +191,7 @@ public class Micro {
                     }
                     // muli a $T0
                     else{
-                        //System.out.println("in addi else");
-                        System.out.println("muli " +checkdollar(Register_list, c.getOp2()) +" "+ register.toStirng());
+                        System.out.println("muli " +checkDollar(registerList, c.getOp2()) +" "+ register.toStirng());
                         register.add(c.getResult());
                     }
                     register_count ++;
@@ -86,20 +201,22 @@ public class Micro {
                 else{
                     // muli $T0 a
                     if(c.getOp2().startsWith("$T") == false){
-                        System.out.println("muli " + c.getOp2() + " "+ checkdollar(Register_list,c.getOp1()));
-                        //register.add(c.getResult());
-                        String prev_reg = checkdollar(Register_list,c.getOp1());
+                        System.out.println("muli " + c.getOp2() + " "+ checkDollar(registerList, c.getOp1()));
+                        String prev_reg = checkDollar(registerList, c.getOp1());
                         int reg_count = Integer.parseInt(prev_reg.replace("r",""));
                         Register test_reg = new Register(reg_count,c.getResult());
-                        Register_list.add(test_reg);
+                        registerList.add(test_reg);
                     }
                     // muli $T0 $T1
                     else {
-                        System.out.println("muli " + checkdollar(Register_list, c.getOp2()) + " " + checkdollar(Register_list, c.getOp1()));
-                        register.add(c.getResult());
+                        System.out.println("muli " + checkDollar(registerList, c.getOp2()) + " " + checkDollar(registerList, c.getOp1()));
+                        String prev_reg = checkDollar(registerList, c.getOp1());
+                        int reg_count = Integer.parseInt(prev_reg.replace("r", ""));
+                        Register test_reg = new Register(reg_count,c.getResult());
+                        registerList.add(test_reg);
                     }
                 }
-                Register_list.add(register);
+                registerList.add(register);
             }
 
             else if (opcode == "ADDI"){
@@ -110,13 +227,12 @@ public class Micro {
                     System.out.println("move "+ c.getOp1() + " " + register.toStirng());
                     // a b
                     if (c.getOp2().startsWith("$T") == false){
-//                        System.out.println("addi "+ c.getOp2()+" "+ register.toStirng());
+                        System.out.println("addi "+ c.getOp2()+" "+ register.toStirng());
                         register.add(c.getResult());
                     }
                     // addi a $T0
                     else{
-                        //System.out.println("in addi else");
-                        System.out.println("addi " +checkdollar(Register_list,c.getOp2()) +" "+ register.toStirng());
+                        System.out.println("addi " +checkDollar(registerList, c.getOp2()) +" "+ register.toStirng());
                         register.add(c.getResult());
                     }
                     register_count ++;
@@ -126,25 +242,24 @@ public class Micro {
                 else{
                     // addi $T0 a
                     if(c.getOp2().startsWith("$T") == false){
-//                        System.out.println(c.getResult());
-                        System.out.println("addi " + c.getOp2() + " " + checkdollar(Register_list, c.getOp1()));
-                        String prev_reg = checkdollar(Register_list,c.getOp1());
+                        System.out.println("addi " + c.getOp2() + " " + checkDollar(registerList, c.getOp1()));
+                        String prev_reg = checkDollar(registerList, c.getOp1());
                         int reg_count = Integer.parseInt(prev_reg.replace("r", ""));
                         Register test_reg = new Register(reg_count,c.getResult());
-                        Register_list.add(test_reg);
-                        //register.add(c.getResult());
+                        registerList.add(test_reg);
                     }
                     // addi $T0 $T1
                     else {
-                        System.out.println(c.getOp1());
-                        System.out.println(c.getOp2());
-                        System.out.println(c.getResult());
-//                        System.out.println(register.getlist());
-                        System.out.println("addi " + checkdollar(Register_list, c.getOp2()) + " " + checkdollar(Register_list, c.getOp1()));
-                        register.add(c.getResult());
+                        System.out.println("addi " + checkDollar(registerList, c.getOp2()) + " " + checkDollar(registerList, c.getOp1()));
+                        String prev_reg = checkDollar(registerList, c.getOp1());
+                        int reg_count = Integer.parseInt(prev_reg.replace("r", ""));
+                        Register test_reg = new Register(reg_count,c.getResult());
+                        registerList.add(test_reg);
+
+                        //register.add(c.getResult());
                     }
                 }
-                Register_list.add(register);
+                registerList.add(register);
             }
             else if (opcode == "DIVI"){
 
@@ -159,8 +274,7 @@ public class Micro {
                     }
                     // divi a $T0
                     else{
-//                        System.out.println("in addi else");
-                        System.out.println("divi " +checkdollar(Register_list, c.getOp2()) +" "+ register.toStirng());
+                        System.out.println("divi " +checkDollar(registerList, c.getOp2()) +" "+ register.toStirng());
                         register.add(c.getResult());
                     }
                     register_count ++;
@@ -170,36 +284,72 @@ public class Micro {
                 else{
                     // divi $T0 a
                     if(c.getOp2().startsWith("$T") == false){
-//                        System.out.println(c.getOp1());
-//                        System.out.println("round" + register_count);
-                        System.out.println("divi " + c.getOp2() + " "+ checkdollar(Register_list,c.getOp1()));
-                        //register.add(c.getResult());
-                        String prev_reg = checkdollar(Register_list,c.getOp1());
+                        System.out.println("divi " + c.getOp2() + " "+ checkDollar(registerList, c.getOp1()));
+                        String prev_reg = checkDollar(registerList, c.getOp1());
                         int reg_count = Integer.parseInt(prev_reg.replace("r",""));
                         Register test_reg = new Register(reg_count,c.getResult());
-                        Register_list.add(test_reg);
+                        registerList.add(test_reg);
                     }
                     // divi $T0 $T1
                     else {
-                        System.out.println("divi " + checkdollar(Register_list, c.getOp2()) + " " + checkdollar(Register_list, c.getOp1()));
-                        register.add(c.getResult());
+                        System.out.println("divi " + checkDollar(registerList, c.getOp2()) + " " + checkDollar(registerList, c.getOp1()));
+                        String prev_reg = checkDollar(registerList, c.getOp1());
+                        int reg_count = Integer.parseInt(prev_reg.replace("r", ""));
+                        Register test_reg = new Register(reg_count,c.getResult());
+                        registerList.add(test_reg);
 
                     }
                 }
-                Register_list.add(register);
+                registerList.add(register);
             }
+            else if (opcode == "DIVF"){
 
+                // divi a
+                if(c.getOp1().startsWith("$T") == false){
+
+                    System.out.println("move " + c.getOp1() + " " + register.toStirng());
+                    // a b
+                    if (c.getOp2().startsWith("$T") == false){
+                        System.out.println("divr "+ c.getOp2()+" "+ register.toStirng());
+                        register.add(c.getResult());
+                    }
+                    // divi a $T0
+                    else{
+                        System.out.println("divr " +checkDollar(registerList, c.getOp2()) +" "+ register.toStirng());
+                        register.add(c.getResult());
+                    }
+                    register_count ++;
+
+                }
+                // divi $T
+                else{
+                    // divi $T0 a
+                    if(c.getOp2().startsWith("$T") == false){
+                        System.out.println("divr " + c.getOp2() + " "+ checkDollar(registerList, c.getOp1()));
+                        String prev_reg = checkDollar(registerList, c.getOp1());
+                        int reg_count = Integer.parseInt(prev_reg.replace("r",""));
+                        Register test_reg = new Register(reg_count,c.getResult());
+                        registerList.add(test_reg);
+                    }
+                    // divi $T0 $T1
+                    else {
+                        System.out.println("divr " + checkDollar(registerList, c.getOp2()) + " " + checkDollar(registerList, c.getOp1()));
+                        String prev_reg = checkDollar(registerList, c.getOp1());
+                        int reg_count = Integer.parseInt(prev_reg.replace("r", ""));
+                        Register test_reg = new Register(reg_count,c.getResult());
+                        registerList.add(test_reg);
+
+                    }
+                }
+                registerList.add(register);
+            }
 
         }
         System.out.println("sys halt");
-        for (Register register : Register_list){
-            System.out.println(register.toStirng());
-            System.out.println(register.getlist());
-        }
     }
 
 
-    private static String checkdollar( ArrayList<Register> Register_list,String opcode){
+    private static String checkDollar( ArrayList<Register> Register_list,String opcode){
         for (Register register : Register_list){
             if(register.getlist().contains(opcode)){
                 return register.toStirng();

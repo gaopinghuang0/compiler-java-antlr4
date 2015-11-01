@@ -4,21 +4,21 @@ import java.util.ArrayList;
  * Created by wu on 10/17/2015.
  */
 public class Register {
-    private int register_count;
-    private ArrayList value_list = new ArrayList();
+    private int registerCount;
+    private ArrayList valueList = new ArrayList();
 
     public Register(int register_count, String dollar){
-        this.register_count = register_count;
-        this.value_list.add(dollar);
+        this.registerCount = register_count;
+        this.valueList.add(dollar);
     }
 
     public void add(String dollar){
-        this.value_list.add(dollar);
+        this.valueList.add(dollar);
     }
     public String toStirng(){
-        return "r" + Integer.toString(register_count);
+        return "r" + Integer.toString(registerCount);
     }
     public ArrayList getlist(){
-        return this.value_list;
+        return this.valueList;
     }
 }

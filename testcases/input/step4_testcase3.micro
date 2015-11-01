@@ -2,7 +2,7 @@ PROGRAM p
 BEGIN
 
 	INT a,b,c;
-	
+
 	FUNCTION VOID main()
 	BEGIN
 		a := 20;
@@ -16,6 +16,6 @@ BEGIN
 		WRITE (c);
 		WRITE (b);
 		WRITE (a);
-	
+
 	END
 END

@@ -5,32 +5,20 @@
 ;STOREI $T2 b
 ;STOREI 40 $T3
 ;STOREI $T3 c
-
 ;MULTI a b $T4
-
 ;ADDI c $T4 $T5
-
 ;MULTI a b $T6
-
 ;ADDI $T6 c $T7
-
 ;DIVI $T7 a $T8
-
 ;ADDI $T5 $T8 $T9
-
 ;STOREI 20 $T10
-
 ;ADDI $T9 $T10 $T11
-
 ;STOREI $T11 c
-
 ;MULTI b b $T12
 ;ADDI $T12 a $T13
 ;STOREI $T13 b
-
 ;MULTI b a $T14
 ;DIVI $T14 a $T15
-
 ;STOREI $T15 a
 ;WRITEI c
 ;WRITEI b
@@ -47,14 +35,12 @@ move 40 r2
 move r2 c
 move a r3
 muli b r3
-
 move c r4
 addi r3 r4
 move a r5
 muli b r5
 addi c r5
 divi a r5
-
 addi r5 r4
 move 20 r6
 addi r6 r4

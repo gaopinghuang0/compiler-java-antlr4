@@ -1,15 +1,17 @@
 /**
  * Created by hgp on 10/16/2015.
  */
-public class OneAddressCode implements Code {
+public class OneAddressCode extends Node implements Code {
     private String opcode;
     private String result;
     private String type;
+    private String label;
 
     public OneAddressCode(String result, String type) {
         this.result = result;
         this.opcode = null;
         this.type = type;
+        this.label = "label" + labelId();
     }
 
     public OneAddressCode(String opcode, String result, String type) {
@@ -30,7 +32,7 @@ public class OneAddressCode implements Code {
     public String getType() {
         return type;
     }
-
+    public String getLabel() {return label;}
     @Override
     public String toIR() {
         return opcode + " " + result;

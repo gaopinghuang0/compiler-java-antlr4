@@ -63,6 +63,8 @@ func_decl
     : {
         symbolStack.push(currTable);
         currTable = new Function(currTable);
+        //System.out.println(count);
+     //   count++;
     } FUNCTION any_type id LPAREN param_decl_list RPAREN BEGIN func_body END {
         currTable.setScope($id.text);
         currTable.getParent().addChild(currTable);
@@ -227,6 +229,9 @@ if_stmt
     : {
         symbolStack.push(currTable);
         currTable = new Block(currTable);
+      //  System.out.println(count);
+        System.out.println("aa");
+
     } IF LPAREN cond RPAREN decl stmt_list else_part FI {
         currTable.getParent().addChild(currTable);
         currTable = symbolStack.pop();
@@ -239,7 +244,35 @@ else_part
         currTable.getParent().addChild(currTable);
         currTable = symbolStack.pop();
     }| /* empty */;
-cond              : expr compop expr;
+cond              : expr{Code expr1Code = $expr.code;} compop
+     expr{
+            String type = $expr.code.getType();
+            Code code = new TwoAddressCode("STOREI", $expr.code.getOp1(), type);
+            codeList.add(code);
+            String compop = $compop.text;
+            String op;
+            //GT GE LT LE NE EQ
+            System.out.println(compop);
+            if(compop.equals(">")){
+                    op = "GT";
+            } else if (compop.equals(">=")){
+                   op = "GE";
+            }else if (compop.equals("<")){
+                   op = "LT";
+            }else if (compop.equals("<=")){
+                   op = "LE";
+            }else if (compop.equals("!=")){
+                   op = "NE";
+            }else if (compop.equals("=")){
+                   op = "EQ";
+            }else{
+                   op="error";
+                System.out.println("error");
+            }
+            Code compareCode = new ThreeAddressCode(op, expr1Code.getResult(), code.getResult(), type);
+            codeList.add(compareCode);
+     };
+
 compop            : '<' | '>' | '=' | '!=' | '<=' | '>=';
 
 init_stmt         : assign_expr | /* empty */;
@@ -251,6 +284,8 @@ for_stmt
     : {
         symbolStack.push(currTable);
         currTable = new Block(currTable);
+        //Code test = new OneAddressCode("LABEL","1","");
+       // codeList.add(test);
     } FOR LPAREN init_stmt SEMI cond SEMI incr_stmt RPAREN decl aug_stmt_list ROF {
        currTable.getParent().addChild(currTable);
        currTable = symbolStack.pop();
@@ -265,9 +300,12 @@ aug_if_stmt
     : {
          symbolStack.push(currTable);
          currTable = new Block(currTable);
+       //  System.out.println(count);
+
     } IF LPAREN cond RPAREN decl aug_stmt_list aug_else_part FI {
         currTable.getParent().addChild(currTable);
         currTable = symbolStack.pop();
+
     };
 aug_else_part
     : {

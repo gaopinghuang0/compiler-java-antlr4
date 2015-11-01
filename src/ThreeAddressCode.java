@@ -8,12 +8,12 @@ public class ThreeAddressCode extends Node implements Code {
     private String op2;
     private String result;
     private String type;
+    private String label;
 
     public ThreeAddressCode(String opcode, String op1, String op2, String type) {
         this.opcode = opcode;
         this.op1 = op1;
         this.op2 = op2;
-        this.result = "$T" + nextId();
         this.type = type;
     }
     public String getOp1(){return op1;}
@@ -29,7 +29,7 @@ public class ThreeAddressCode extends Node implements Code {
     public String getType() {
         return type;
     }
-
+    public String getLabel() {return label;}
     public String toIR() {
         return opcode + " " + op1 + " " + op2 + " " + result;
     }

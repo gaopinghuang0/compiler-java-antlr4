@@ -3,9 +3,7 @@
  */
 public class Node {
     private static int currId = 0;
-
     public int nextId() {
         return ++currId;
     }
-
 }
