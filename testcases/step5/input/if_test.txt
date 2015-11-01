@@ -1,0 +1,10 @@
+PROGRAM IF
+BEGIN
+INT a, b;
+     a := 2;
+     IF (a = 1)
+      b := 1;
+     ELSE
+      b := 2;
+     FI
+END
