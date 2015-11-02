@@ -7,8 +7,7 @@ import java.util.*;
 
 public class Micro {
     public static void main(String[] args) throws IOException {
-        for (int i = 0; i < args.length; i++) {
-            String filename = args[i];
+        for (String filename : args) {
             ANTLRFileStream input = null;
             try {
                 input = new ANTLRFileStream(filename);

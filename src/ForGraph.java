@@ -1,4 +1,4 @@
-import java.util.ArrayList;
+import java.util.*;
 
 /**
  * Created by hgp on 11/1/2015.
@@ -7,7 +7,7 @@ public class ForGraph extends Graph {
     private String topLabel = "";
     private String incrLabel = "";
     private String outLabel = "";
-    private ArrayList<Code> incrCodeList;
+    private List<Code> incrCodeList;
 
     public ForGraph() {
         this.topLabel = nextLable();
@@ -32,12 +32,12 @@ public class ForGraph extends Graph {
     }
 
     @Override
-    public ArrayList<Code> getIncrCodeList() {
+    public List<Code> getIncrCodeList() {
         return incrCodeList;
     }
 
     @Override
-    public void setIncrCodeList(ArrayList<Code> incrCodeList) {
+    public void setIncrCodeList(List<Code> incrCodeList) {
         this.incrCodeList = incrCodeList;
     }
 }

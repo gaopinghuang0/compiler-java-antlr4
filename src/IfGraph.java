@@ -1,4 +1,4 @@
-import java.util.ArrayList;
+import java.util.*;
 
 /**
  * Created by hgp on 11/1/2015.
@@ -28,12 +28,12 @@ public class IfGraph extends Graph {
     }
 
     @Override
-    public ArrayList<Code> getIncrCodeList() {
+    public List<Code> getIncrCodeList() {
         return null;
     }
 
     @Override
-    void setIncrCodeList(ArrayList<Code> list) {
+    void setIncrCodeList(List<Code> list) {
         ;
     }
 }

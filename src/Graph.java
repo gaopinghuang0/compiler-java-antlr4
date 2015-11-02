@@ -1,6 +1,6 @@
 import org.antlr.v4.codegen.model.AddToLabelList;
 
-import java.util.ArrayList;
+import java.util.*;
 
 /**
  * Created by hgp on 11/1/2015.
@@ -23,6 +23,6 @@ public abstract class Graph {
     abstract String getTopLabel();
     abstract String getOutLabel();
     abstract String getIncrLabel();
-    abstract ArrayList<Code> getIncrCodeList();
-    abstract void setIncrCodeList(ArrayList<Code> list);
+    abstract List<Code> getIncrCodeList();
+    abstract void setIncrCodeList(List<Code> list);
 }

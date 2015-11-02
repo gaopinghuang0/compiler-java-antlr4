@@ -6,10 +6,12 @@ grammar Micro;
 
 @members {
     SymbolTable currTable = null;
-    SymbolTableStack symbolStack = new SymbolTableStack();
+    CostomStack<SymbolTable> symbolStack = new CostomStack<>();
     ArrayList<Code> codeList = new ArrayList<>();
-    Stack graphStack = new Stack();
+    CostomStack<Graph> graphStack = new CostomStack<>();
     Graph currGraph = null;
+    // handle break and continue
+    // ArrayList<Graph> tempForGraphList = new ArrayList<>();
 }
 
 /* Program */
@@ -222,7 +224,7 @@ if_stmt
         // out label
         OneAddressCode endCode = new OneAddressCode("LABEL", currGraph.getOutLabel(), "labelType");
         codeList.add(endCode);
-        currGraph = (Graph)graphStack.pop();
+        currGraph = graphStack.pop();
     };
 else_part
     : {
@@ -264,7 +266,7 @@ for_stmt
     } incr_stmt {
         // after incr_stmt, remove the items after the start size
         // store it for later use
-        ArrayList<Code> tempList = new ArrayList<>();
+        List<Code> tempList = new ArrayList<>();
         while (codeList.size() > currGraph.getStartSize()) {
             tempList.add(codeList.remove(codeList.size() - 1));
         }
@@ -280,11 +282,20 @@ for_stmt
        // jump to start of the loop (top label) then out label
        codeList.add(new OneAddressCode("JUMP", currGraph.getTopLabel(), "labelType"));
        codeList.add(new OneAddressCode("LABEL", currGraph.getOutLabel(), "labelType"));
+       currGraph = graphStack.pop();
     };
 
 /* CONTINUE and BREAK statements. ECE 573 students only */
 aug_stmt_list     : aug_stmt aug_stmt_list | /* empty */;
-aug_stmt          : base_stmt | aug_if_stmt | for_stmt | CONTINUE SEMI | BREAK SEMI;
+aug_stmt          : base_stmt | aug_if_stmt | for_stmt | CONTINUE SEMI {
+    // continue, jump to innermost for_loop increment label
+    Graph tempGraph = graphStack.lastIndexOfClass(ForGraph.class);
+    codeList.add(new OneAddressCode("JUMP", tempGraph.getIncrLabel(), "labelType"));
+} | BREAK SEMI {
+    // break, jump to innermost for_loop out label
+    Graph tempGraph = graphStack.lastIndexOfClass(ForGraph.class);
+    codeList.add(new OneAddressCode("JUMP", tempGraph.getOutLabel(), "labelType"));
+};
 
 /* Augmented IF statements for ECE 573 students */
 aug_if_stmt
@@ -306,7 +317,7 @@ aug_if_stmt
         // out label
         OneAddressCode endCode = new OneAddressCode("LABEL", currGraph.getOutLabel(), "labelType");
         codeList.add(endCode);
-        currGraph = (Graph)graphStack.pop();
+        currGraph = graphStack.pop();
     };
 aug_else_part
     : {
