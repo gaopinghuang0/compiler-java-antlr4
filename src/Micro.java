@@ -24,7 +24,7 @@ public class Micro {
             System.out.println(";tiny code");
             printSymbolTable(data.getTable());
             TinyCode tc = new TinyCode(data.getCodeList());
-            tc.toTinyCode();
+//            tc.toTinyCode();
         }
     }
 
@@ -38,7 +38,6 @@ public class Micro {
     private static void printSymbolTable(SymbolTable table) {
         table.printTable();
         for (SymbolTable st : table.getChildren()) {
-            System.out.println();
             printSymbolTable(st);
         }
     }

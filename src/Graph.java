@@ -7,22 +7,22 @@ import java.util.ArrayList;
  */
 public abstract class Graph {
     private static int labelId = 0;
-    private boolean incr = false;   // true if entering incr_stmt
+    private int startSize = 0;   // get size of codeList before entering incr_stmt
 
 
     public String nextLable() { return "label" + (++labelId);}
 
-    public boolean isIncr() {
-        return incr;
+    public int getStartSize() {
+        return startSize;
     }
 
-    public void setIncr(boolean flag) {
-        this.incr = flag;
+    public void setStartSize(int startSize) {
+        this.startSize = startSize;
     }
 
     abstract String getTopLabel();
     abstract String getOutLabel();
     abstract String getIncrLabel();
     abstract ArrayList<Code> getIncrCodeList();
-    abstract void addToIncrList(Code code);
+    abstract void setIncrCodeList(ArrayList<Code> list);
 }

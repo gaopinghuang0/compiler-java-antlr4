@@ -33,7 +33,7 @@ public class IfGraph extends Graph {
     }
 
     @Override
-    void addToIncrList(Code code) {
+    void setIncrCodeList(ArrayList<Code> list) {
         ;
     }
 }

@@ -86,11 +86,7 @@ assign_expr       : id ASSIGN expr {
             System.out.println($expr.text);
         }
         Code code = new TwoAddressCode(opcode, $expr.code.getResult(), $id.text, type);
-        if (currGraph != null && currGraph.isIncr()) {
-            currGraph.addToIncrList(code);
-        } else {
-            codeList.add(code);
-        }
+        codeList.add(code);
     };
 read_stmt
     : READ LPAREN id_list RPAREN SEMI {
@@ -263,11 +259,17 @@ for_stmt
         OneAddressCode topCode = new OneAddressCode("LABEL", currGraph.getTopLabel(), "labelType");
         codeList.add(topCode);
     } SEMI cond SEMI {
-        // before entering incr_stmt, set flag to true and store codes differently
-        // i.e., store in currGraph not in codeList
-        currGraph.setIncr(true);
+        // before entering incr_stmt, store size of codeList
+        currGraph.setStartSize(codeList.size());
     } incr_stmt {
-        currGraph.setIncr(false);
+        // after incr_stmt, remove the items after the start size
+        // store it for later use
+        ArrayList<Code> tempList = new ArrayList<>();
+        while (codeList.size() > currGraph.getStartSize()) {
+            tempList.add(codeList.remove(codeList.size() - 1));
+        }
+        Collections.reverse(tempList);
+        currGraph.setIncrCodeList(tempList);
     } RPAREN decl aug_stmt_list ROF {
        currTable.getParent().addChild(currTable);
        currTable = symbolStack.pop();
@@ -287,11 +289,24 @@ aug_stmt          : base_stmt | aug_if_stmt | for_stmt | CONTINUE SEMI | BREAK S
 /* Augmented IF statements for ECE 573 students */
 aug_if_stmt
     : {
-         symbolStack.push(currTable);
-         currTable = new Block(currTable);
-    } IF LPAREN cond RPAREN decl aug_stmt_list aug_else_part FI {
+        symbolStack.push(currTable);
+        currTable = new Block(currTable);
+
+        graphStack.push(currGraph);
+        currGraph = new IfGraph();
+    } IF LPAREN cond RPAREN decl aug_stmt_list {
+        OneAddressCode midCode = new OneAddressCode("JUMP", currGraph.getOutLabel(), "labelType");
+        codeList.add(midCode);
+        midCode = new OneAddressCode("LABEL", currGraph.getTopLabel(), "labelType");
+        codeList.add(midCode);
+    } aug_else_part FI {
         currTable.getParent().addChild(currTable);
         currTable = symbolStack.pop();
+
+        // out label
+        OneAddressCode endCode = new OneAddressCode("LABEL", currGraph.getOutLabel(), "labelType");
+        codeList.add(endCode);
+        currGraph = (Graph)graphStack.pop();
     };
 aug_else_part
     : {
@@ -300,6 +315,8 @@ aug_else_part
     } ELSE decl aug_stmt_list {
         currTable.getParent().addChild(currTable);
         currTable = symbolStack.pop();
+        // end of else_part, jump to out label
+        codeList.add(new OneAddressCode("JUMP", currGraph.getOutLabel(), "labelType"));
     }| /* empty */;
 
 

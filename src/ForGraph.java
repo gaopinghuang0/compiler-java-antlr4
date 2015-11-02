@@ -37,7 +37,7 @@ public class ForGraph extends Graph {
     }
 
     @Override
-    public void addToIncrList(Code code) {
-        this.incrCodeList.add(code);
+    public void setIncrCodeList(ArrayList<Code> incrCodeList) {
+        this.incrCodeList = incrCodeList;
     }
 }
