@@ -14,6 +14,10 @@ public class SymbolEntry {
         return type;
     }
 
+    public String getValue() {
+        return value;
+    }
+
     public SymbolEntry(String name, String type) {
         this.name = name;
         this.type = type;

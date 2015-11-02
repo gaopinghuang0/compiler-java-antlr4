@@ -95,7 +95,14 @@ read_stmt
        String[] names = $id_list.text.split(",");
        for (String name : names) {
            String type = currTable.lookUpType(name);
-           String op = type.equals("INT") ? "READI" : "READF";
+           String op;
+           if (type.equals("INT")) {
+               op = "READI";
+           } else if (type.equals("FLOAT")) {
+               op = "READF";
+           } else {
+               op = "READS";
+           }
            Code c = new OneAddressCode(op, name, type);
            codeList.add(c);
        }
@@ -105,7 +112,14 @@ write_stmt
        String[] names = $id_list.text.split(",");
        for (String name : names) {
            String type = currTable.lookUpType(name);
-           String op = type.equals("INT") ? "WRITEI" : "WRITEF";
+           String op;
+           if (type.equals("INT")) {
+               op = "WRITEI";
+           } else if (type.equals("FLOAT")) {
+               op = "WRITEF";
+           } else {
+               op = "WRITES";
+           }
            Code c = new OneAddressCode(op, name, type);
            codeList.add(c);
        }

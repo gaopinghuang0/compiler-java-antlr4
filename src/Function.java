@@ -34,10 +34,4 @@ public class Function extends Program implements SymbolTable {
         this.children.add(func);
     }
 
-//    public void printTable() {
-//        System.out.println("Symbol table "+scope);
-//        for (SymbolEntry se : this.decls) {
-//            System.out.println(se);
-//        }
-//    }
 }

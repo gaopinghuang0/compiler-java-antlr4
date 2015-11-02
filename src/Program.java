@@ -54,7 +54,11 @@ public class Program implements SymbolTable {
     public void printTable() {
 //        System.out.println("Symbol table "+scope);
         for (SymbolEntry se : this.getDecls()) {
-            System.out.println("var " + se.getName());
+            if (se.getType().equals("STRING")) {
+                System.out.println("str " + se.getName() + " " + se.getValue());
+            } else {
+                System.out.println("var " + se.getName());
+            }
         }
     }
 
