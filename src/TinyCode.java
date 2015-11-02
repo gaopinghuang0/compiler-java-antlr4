@@ -1,3 +1,6 @@
+import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
+
+import java.lang.reflect.Array;
 import java.util.*;
 
 /**
@@ -51,36 +54,75 @@ public class TinyCode {
     }
 
     public void handleOneAddress(Code c) {
-        System.out.println("sys "+ getTinyOpcode(c.getOpcode()) + " " + c.getResult());
+        //LABEL READ WRITE
+        String op = c.getOpcode();
+        if(op.equals("LABEL") ){
+            System.out.println( getTinyOpcode(op) + " " + c.getResult());
+        }else if(op.equals("JUMP")){
+            System.out.println( getTinyOpcode(op).replace("u","") + " " +c.getResult());
+        }
+        else{
+            System.out.println("sys "+ getTinyOpcode(c.getOpcode()) + " " + c.getResult());
+        }
     }
 
     public void handleTwoAddress(Code c) {
         String op1 = c.getOp1();
+        String result = c.getResult();
         String reg = "";
         if (op1.startsWith("$T")) {
             reg = lookUpMap(op1);
             System.out.println("move "+reg+ " " +c.getResult());
         } else {
             reg = nextReg();
-            System.out.println("move "+op1+" "+reg);
+            System.out.println("move " + op1 + " " + reg);
+            if(result.startsWith("$T") == false){
+                System.out.println("move "+reg+" "+result);
+            }
             map.put(c.getResult(), reg);
         }
     }
+//;ADDI $T5 $T8 $T9
+//move 20 r6
+//addi r6 r4
 
     public void handleThreeAddress(Code c) {
         String op1 = c.getOp1();
         String op2 = c.getOp2();
+        String op = c.getOpcode();
+        String type = c.getType();
         String reg = "";
+        String[] operationList = new String[] {"ADDI","ADDF","SUBI","SUBF","MULTI","MULTF","DIVI","DIVF"};
+        if (Arrays.asList(operationList).contains(op)){
+            if (op1.startsWith("$T")) {
+                reg = lookUpMap(op1);
+            } else {
+                reg = nextReg();
+                System.out.println("move " + op1 + " " + reg);
+            }
+            op2 = op2.startsWith("$T") ? lookUpMap(op2) : op2;
+            System.out.println(getTinyOpcode(c.getOpcode()) + " " + op2 + " " + reg);
+            map.put(c.getResult(), reg);
 
-        if (op1.startsWith("$T")) {
-            reg = lookUpMap(op1);
-        } else {
-            reg = nextReg();
-            System.out.println("move " + op1 + " " + reg);
+        }else{
+
+            if ((op2.startsWith("$T") || op2.startsWith("r")) == false){
+                reg = nextReg();
+                System.out.println("move " + op2 + " " + reg);
+                map.put(op2, reg);
+            }
+            op2 = op2.startsWith("r") ? op2 : lookUpMap(op2);
+
+            if(type.equals("INT")){
+                System.out.println("cmpi " + op1 + " " + op2);
+            }
+            else if(type.equals("FLOAT")){
+                System.out.println("cmpr " + op1 + " " + op2);
+            }
+            System.out.println("j"+op.toLowerCase() + " " + c.getResult());
+
         }
-        op2 = op2.startsWith("$T") ? lookUpMap(op2) : op2;
-        System.out.println(getTinyOpcode(c.getOpcode()) + " " + op2 + " " + reg);
-        map.put(c.getResult(), reg);
+
     }
 
     public String getTinyOpcode(String opcode) {
@@ -90,7 +132,15 @@ public class TinyCode {
         } else if (opcode.startsWith("READ")) {
             op = opcode.endsWith("F") ? "readr" : "readi";
         } else if (opcode.startsWith("WRITE")) {
-            op = opcode.endsWith("F") ? "writer" : "writei";
+            if(opcode.endsWith("F")){
+                op = "writer";
+            }else if(opcode.endsWith("I")){
+                op = "writei";
+            }else{
+                op = "writes";
+            }
+        } else if (opcode.equals("LABEL") || opcode.equals("JUMP")){
+            op = opcode.toLowerCase();
         }
 
         return op;
