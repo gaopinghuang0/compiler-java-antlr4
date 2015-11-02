@@ -8,6 +8,8 @@ grammar Micro;
     SymbolTable currTable = null;
     SymbolTableStack symbolStack = new SymbolTableStack();
     ArrayList<Code> codeList = new ArrayList<>();
+    Stack graphStack = new Stack();
+    Graph currGraph = null;
 }
 
 /* Program */
@@ -206,9 +208,20 @@ if_stmt
     : {
         symbolStack.push(currTable);
         currTable = new Block(currTable);
-    } IF LPAREN cond RPAREN decl stmt_list else_part FI {
+        graphStack.push(currGraph);
+        currGraph = new IfGraph();
+    } IF LPAREN cond RPAREN decl stmt_list {
+        OneAddressCode midCode = new OneAddressCode("JUMP", currGraph.getOutLabel(), "labelType");
+        codeList.add(midCode);
+        midCode = new OneAddressCode("LABEL", currGraph.getTopLabel(), "labelType");
+        codeList.add(midCode);
+    } else_part FI {
         currTable.getParent().addChild(currTable);
         currTable = symbolStack.pop();
+
+        OneAddressCode endCode = new OneAddressCode("LABEL", currGraph.getOutLabel(), "labelType");
+        codeList.add(endCode);
+        currGraph = (Graph)graphStack.pop();
     };
 else_part
     : {
@@ -217,8 +230,18 @@ else_part
     } ELSE decl stmt_list {
         currTable.getParent().addChild(currTable);
         currTable = symbolStack.pop();
+
+        OneAddressCode code = new OneAddressCode("JUMP", currGraph.getOutLabel(), "labelType");
+        codeList.add(code);
     }| /* empty */;
-cond              : expr compop expr;
+cond              : prevExpr=expr compop postExpr=expr {
+    String op1 = $prevExpr.code.getResult();
+    String type = $prevExpr.code.getType();
+    String op2 = $postExpr.code.getResult();
+    String label = currGraph.getTopLabel();
+    ThreeAddressCode condCode = new ThreeAddressCode(Compop.toIRop($compop.text), op1, op2, label, type);
+    codeList.add(condCode);
+};
 compop            : '<' | '>' | '=' | '!=' | '<=' | '>=';
 
 init_stmt         : assign_expr | /* empty */;

@@ -16,6 +16,15 @@ public class ThreeAddressCode extends Node implements Code {
         this.result = "$T" + nextId();
         this.type = type;
     }
+
+    public ThreeAddressCode(String opcode, String op1, String op2, String result, String type) {
+        this.opcode = opcode;
+        this.op1 = op1;
+        this.op2 = op2;
+        this.result = result;
+        this.type = type;
+    }
+
     public String getOp1(){return op1;}
     public String getOp2(){return op2;}
     public String getOpcode() {
