@@ -23,7 +23,17 @@ public class IfGraph extends Graph {
     }
 
     @Override
-    String getIncrLabel() {
+    public String getIncrLabel() {
         return null;
+    }
+
+    @Override
+    public ArrayList<Code> getIncrCodeList() {
+        return null;
+    }
+
+    @Override
+    void addToIncrList(Code code) {
+        ;
     }
 }
