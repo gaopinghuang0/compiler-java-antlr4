@@ -19,11 +19,15 @@ public class Micro {
             CommonTokenStream tokens = new CommonTokenStream(lexer);
             MicroParser parser = new MicroParser(tokens);
             ReturnData data = parser.program().data;
-            printIR(data.getCodeList());
-            System.out.println(";tiny code");
+
+//            printIR(data.getCodeList());
+            System.out.println(";IR code");
             printSymbolTable(data.getTable());
-            TinyCode tc = new TinyCode(data.getCodeList());
-            tc.toTinyCode();
+//            printSymbolTable(data.getTable().printTable();
+//            TinyCode tc = new TinyCode(data.getCodeList());
+//            tc.toTinyCode();
+            System.out.println(";tiny code");
+            printTinyCode(data.getTable());
         }
     }
 
@@ -36,9 +40,16 @@ public class Micro {
 
     private static void printSymbolTable(SymbolTable table) {
         table.printTable();
+
         for (SymbolTable st : table.getChildren()) {
             printSymbolTable(st);
         }
     }
 
+    private  static void printTinyCode(SymbolTable table){
+        table.printTiny();
+        for (SymbolTable st : table.getChildren()) {
+            printTinyCode(st);
+        }
+    }
 }

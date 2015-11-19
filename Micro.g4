@@ -10,8 +10,6 @@ grammar Micro;
     ArrayList<Code> codeList = new ArrayList<>();
     CostomStack<Graph> graphStack = new CostomStack<>();
     Graph currGraph = null;
-    // handle break and continue
-    // ArrayList<Graph> tempForGraphList = new ArrayList<>();
 }
 
 /* Program */
@@ -20,6 +18,7 @@ program  returns [ReturnData data]
         ReturnData data = new ReturnData();
         data.setTable($pgm_body.table);
         data.setCodeList(codeList);
+        data.setTableStack(symbolStack);
         $data = data;
     };
 id                : IDENTIFIER;
@@ -42,7 +41,7 @@ var_decl
     : var_type id_list SEMI {
         String[] names = $id_list.text.split(",");
         for (String name : names) {
-            currTable.addElement(new SymbolEntry(name, $var_type.text));
+            currTable.addDeclEntry(name, $var_type.text);
         }
     };
 var_type	      : FLOAT | INT;
@@ -53,7 +52,7 @@ id_tail           : COMMA id id_tail   | /* empty */;
 /* Function Paramater List */
 param_decl_list   : param_decl param_decl_tail | /* empty */;
 param_decl        : var_type id {
-        currTable.addElement(new SymbolEntry($id.text, $var_type.text));
+        currTable.addParamEntry($id.text, $var_type.text);
     };
 param_decl_tail   : COMMA param_decl param_decl_tail | /* empty */;
 
@@ -64,6 +63,17 @@ func_decl
         symbolStack.push(currTable);
         currTable = new Function(currTable);
     } FUNCTION any_type id LPAREN param_decl_list RPAREN BEGIN func_body END {
+        //System.out.print("LABEL " + $id.text);
+        Code prefix1 = new PrefixCode("LABEL",$id.text);
+        Code prefix2 = new PrefixCode("LINK","");
+        // add prefix code at the beginning fo array
+        currTable.addFirst(prefix2);
+        currTable.addFirst(prefix1);
+
+       // System.out.println(currTable.getCodeList());
+
+        //codeList.add(currTable.getCodeList());
+      //  System.out.println(codeList);
         currTable.setScope($id.text);
         currTable.getParent().addChild(currTable);
         currTable = symbolStack.pop();
@@ -78,7 +88,7 @@ base_stmt         : assign_stmt | read_stmt | write_stmt | return_stmt;
 /* Basic Statements */
 assign_stmt       : assign_expr SEMI;
 assign_expr       : id ASSIGN expr {
-        String type = $expr.code.getType();
+        String type = currTable.lookUpType($id.text);
         String opcode = "";
         if (type != null && type.equals("INT")) {
             opcode = "STOREI";
@@ -87,8 +97,13 @@ assign_expr       : id ASSIGN expr {
         } else {
             System.out.println($expr.text);
         }
-        Code code = new TwoAddressCode(opcode, $expr.code.getResult(), $id.text, type);
+        String var = currTable.lookUpVar($id.text);
+        List a = currTable.getCodeList();
+        Code c = (Code)a.get(a.size()-1);
+        Code code = new TwoAddressCode(opcode, c.getResult(), var, type);
         codeList.add(code);
+        // non-auto-increment, use addCode
+        currTable.addCode(code);
     };
 read_stmt
     : READ LPAREN id_list RPAREN SEMI {
@@ -105,6 +120,9 @@ read_stmt
            }
            Code c = new OneAddressCode(op, name, type);
            codeList.add(c);
+           //System.out.println(currTable.lookUpVar(name));
+           String lookUpName = currTable.lookUpVar(name);
+           currTable.addOneAddressCode(op, lookUpName, type);
        }
     };
 write_stmt
@@ -115,16 +133,29 @@ write_stmt
            String op;
            if (type.equals("INT")) {
                op = "WRITEI";
+               name = currTable.lookUpVar(name);
            } else if (type.equals("FLOAT")) {
                op = "WRITEF";
+               name = currTable.lookUpVar(name);
            } else {
                op = "WRITES";
+
            }
            Code c = new OneAddressCode(op, name, type);
            codeList.add(c);
+           currTable.addOneAddressCode(op, name, type);
        }
     };
-return_stmt       : RETURN expr SEMI;
+    return_stmt       : RETURN expr SEMI{
+        //System.out.println($expr.code.getResult());
+        //System.out.println($expr.code.getType());
+        String type = $expr.code.getType();
+        String op = "";
+        String result = $expr.code.getResult();
+        op = type.equals("INT") ? "STOREI" : "STOREF";
+        currTable.addResultAddressCode(op, result, type);
+
+    };
 
 /* Expressions */
 expr  returns [Code code]
@@ -136,6 +167,8 @@ expr  returns [Code code]
             String op = e.getOpcode();
             $code = new ThreeAddressCode(op, e.getResult(), f.getResult(), type);
             codeList.add($code);
+            // auto-increment, use addThree...
+            currTable.addThreeAddressCode(op, e.getResult(), f.getResult(), type);
         } else {
             $code = f;
         }
@@ -166,6 +199,7 @@ factor  returns [Code code]
         if (f != null && type != null) {
             String op = f.getOpcode();
             $code = new ThreeAddressCode(op, f.getResult(), p.getResult(), type);
+            currTable.addThreeAddressCode(op, f.getResult(), p.getResult(), type);
             codeList.add($code);
         } else {
             $code = p;
@@ -184,6 +218,7 @@ factor_prefix  returns [Code code]
             $code = new ThreeAddressCode($fp.code.getOpcode(), $fp.code.getResult(),
                     $postfix_expr.code.getResult(), type);
             codeList.add($code);
+            currTable.addThreeAddressCode($fp.code.getOpcode(), $fp.code.getResult(),$postfix_expr.code.getResult(), type);
             $code = new OneAddressCode(op, $code.getResult(), type);
         } else {
             $code = new OneAddressCode(op, $postfix_expr.code.getResult(), type);
@@ -195,10 +230,30 @@ postfix_expr  returns [Code code]
     }
     | call_expr {
     //TODO: in next step
+        $code = $call_expr.code;
     };
-call_expr         : id LPAREN expr_list RPAREN;
-expr_list         : expr expr_list_tail | /* empty */;
-expr_list_tail    : COMMA expr expr_list_tail | /* empty */;
+call_expr returns[Code code]: id LPAREN expr_list RPAREN {
+        $code = new OneAddressCode("RETURN", "$"+"XX", "INT");
+        currTable.addOneAddressCode("PUSH","","");
+        String[] names = $expr_list.text.split(",");
+        String type;
+        for (String name : names) {
+            System.out.println(name);
+            type = currTable.lookUpType(name);
+            String lookUpName = currTable.lookUpVar(name);
+            currTable.addOneAddressCode("PUSH", lookUpName, type);
+        }
+        currTable.addOneAddressCode("JSR", $id.text, "LABEL");
+        for (String name: names) {
+            type = currTable.lookUpType(name);
+            currTable.addOneAddressCode("POP", "", type);
+        }
+        currTable.addOneAddressCode("POP","","", true);
+};
+expr_list : expr expr_list_tail | /* empty */;
+expr_list_tail   returns [Code code] : COMMA expr expr_list_tail | /* empty */{
+
+};
 primary  returns [Code code]
     : LPAREN expr RPAREN {
         $code = $expr.code;
@@ -206,15 +261,20 @@ primary  returns [Code code]
     | id {
         // look up type from currTable to it's parent
         String type = currTable.lookUpType($id.text);
-        $code = new OneAddressCode($id.text, type);
+        String var = currTable.lookUpVar($id.text);
+        $code = new OneAddressCode(var, type);
     }
     | INTLITERAL {
+
         $code = new TwoAddressCode("STOREI", $INTLITERAL.text, "INT");
         codeList.add($code);
+        // auto-increment
+        currTable.addTwoAddressCode("STOREI", $INTLITERAL.text, "INT");
     }
     | FLOATLITERAL {
         $code = new TwoAddressCode("STOREF", $FLOATLITERAL.text, "FLOAT");
         codeList.add($code);
+        currTable.addTwoAddressCode("STOREF", $FLOATLITERAL.text, "FLOAT");
     };
 addop             : '+' | '-';
 mulop             : '*' | '/';
@@ -276,13 +336,14 @@ for_stmt
         codeList.add(topCode);
     } SEMI cond SEMI {
         // before entering incr_stmt, store size of codeList
-        currGraph.setStartSize(codeList.size());
+        currGraph.setStartSize(currTable.getCodeList().size());
     } incr_stmt {
         // after incr_stmt, remove the items after the start size
         // store it for later use
-        List<Code> tempList = new ArrayList<>();
-        while (codeList.size() > currGraph.getStartSize()) {
-            tempList.add(codeList.remove(codeList.size() - 1));
+        ArrayList<Code> tempList = new ArrayList<>();
+        List currCodeList = currTable.getCodeList();
+        while (currCodeList.size() > currGraph.getStartSize()) {
+            tempList.add((Code)currCodeList.remove(currCodeList.size() - 1));
         }
         Collections.reverse(tempList);
         currGraph.setIncrCodeList(tempList);
@@ -293,6 +354,7 @@ for_stmt
        // increment label and append increment_statement
        codeList.add(new OneAddressCode("LABEL", currGraph.getIncrLabel(), "labelType"));
        codeList.addAll(currGraph.getIncrCodeList());
+       currTable.getCodeList().addAll(currGraph.getIncrCodeList());
        // jump to start of the loop (top label) then out label
        codeList.add(new OneAddressCode("JUMP", currGraph.getTopLabel(), "labelType"));
        codeList.add(new OneAddressCode("LABEL", currGraph.getOutLabel(), "labelType"));

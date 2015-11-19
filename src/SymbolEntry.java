@@ -5,6 +5,7 @@ public class SymbolEntry {
     private String name = "";
     private String type = "";
     private String value = "";
+    private String variable = "";
 
     public String getName() {
         return name;
@@ -28,11 +29,22 @@ public class SymbolEntry {
         this.value = value;
     }
 
+    public SymbolEntry(String name, String type, String value, String variable) {
+        this.name = name;
+        this.type = type;
+        this.value = value;
+        this.variable = variable;
+    }
+
     public final String toString() {
         String out = "name " + name + " type " + type;
         if (this.type.equals("STRING")) {
             out += " value " + value;
         }
         return out;
+    }
+
+    public String getVariable() {
+        return variable;
     }
 }

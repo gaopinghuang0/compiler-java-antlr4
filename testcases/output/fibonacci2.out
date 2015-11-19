@@ -1,0 +1,206 @@
+;IR code
+;LABEL F
+;LINK
+;STOREI 2 $T1
+;LE $P1 $T1 label1
+;STOREI 1 $T2
+;SUBI $P1 $T2 $T3
+;PUSH 
+;PUSH $T3
+;JSR F
+;POP 
+;POP $T4
+;STOREI $T4 $L1
+;STOREI 2 $T5
+;SUBI $P1 $T5 $T6
+;PUSH 
+;PUSH $T6
+;JSR F
+;POP 
+;POP $T7
+;STOREI $T7 $L2
+;ADDI $L1 $L2 $T8
+;STOREI $T8 $R
+;RET
+;JUMP label2
+;LABEL label1
+;STOREI 0 $T9
+;NE $P1 $T9 label3
+;STOREI 0 $T10
+;STOREI $T10 $R
+;RET
+;JUMP label4
+;LABEL label3
+;STOREI 1 $T11
+;NE $P1 $T11 label5
+;STOREI 1 $T12
+;STOREI $T12 $R
+;RET
+;JUMP label6
+;LABEL label5
+;STOREI 1 $T13
+;STOREI $T13 $R
+;RET
+;JUMP label6
+;LABEL label6
+;JUMP label4
+;LABEL label4
+;JUMP label2
+;LABEL label2
+;RET
+
+;LABEL main
+;LINK
+;WRITES input
+;READI $L2
+;STOREI 0 $T1
+;STOREI $T1 $L1
+;LABEL label7
+;EQ $L1 $L2 label9
+;PUSH 
+;PUSH $L1
+;JSR F
+;POP 
+;POP $T4
+;STOREI $T4 $L3
+;WRITEI $L1
+;WRITES space
+;WRITEI $L3
+;WRITES eol
+;LABEL label8
+;STOREI 1 $T2
+;ADDI $L1 $T2 $T3
+;STOREI $T3 $L1
+;JUMP label7
+;LABEL label9
+;STOREI 0 $T5
+;STOREI $T5 $R
+;RET
+
+;tiny code
+str input "Please input an integer number: "
+str space " "
+str eol "\n"
+push
+push r0
+push r1
+push r2
+push r3
+jsr main
+sys halt
+label F
+link 2
+move 2 r0
+cmpi $6 r0
+jle label1
+move 1 r1
+move $6 r2
+subi r1 r2
+push 
+push r2
+push r0
+push r1
+push r2
+push r3
+jsr F
+pop r3
+pop r2
+pop r1
+pop r0
+pop 
+pop r3
+move r3 $-1
+move 2 r4
+move $6 r5
+subi r4 r5
+push 
+push r5
+push r0
+push r1
+push r2
+push r3
+jsr F
+pop r3
+pop r2
+pop r1
+pop r0
+pop 
+pop r6
+move r6 $-2
+move $-1 r7
+addi $-2 r7
+move r7 $7
+unlnk
+ret
+jmp label2
+label label1
+move 0 r8
+cmpi $6 r8
+jne label3
+move 0 r9
+move r9 $7
+unlnk
+ret
+jmp label4
+label label3
+move 1 r10
+cmpi $6 r10
+jne label5
+move 1 r11
+move r11 $7
+unlnk
+ret
+jmp label6
+label label5
+move 1 r12
+move r12 $7
+unlnk
+ret
+jmp label6
+label label6
+jmp label4
+label label4
+jmp label2
+label label2
+unlnk
+ret
+label main
+link 3
+sys writes input
+sys readi $-2
+move 0 r13
+move r13 $-1
+label label7
+move $-2 r14
+cmpi $-1 r14
+jeq label9
+push 
+push $-1
+push r0
+push r1
+push r2
+push r3
+jsr F
+pop r3
+pop r2
+pop r1
+pop r0
+pop 
+pop r15
+move r15 $-3
+sys writei $-1
+sys writes space
+sys writei $-3
+sys writes eol
+label label8
+move 1 r16
+move $-1 r17
+addi r16 r17
+move r17 $-1
+jmp label7
+label label9
+move 0 r18
+move r18 $6
+unlnk
+ret
+end
