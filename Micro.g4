@@ -95,7 +95,7 @@ assign_expr       : id ASSIGN expr {
         } else if (type != null && type.equals("FLOAT")) {
             opcode = "STOREF";
         } else {
-            System.out.println($expr.text);
+            System.out.println("in assign_expr"+$expr.text);
         }
         String var = currTable.lookUpVar($id.text);
         List a = currTable.getCodeList();
@@ -229,16 +229,15 @@ postfix_expr  returns [Code code]
         $code = $primary.code;
     }
     | call_expr {
-    //TODO: in next step
-        $code = $call_expr.code;
-    };
-call_expr returns[Code code]: id LPAREN expr_list RPAREN {
+        // mock a code for global codeList, no real use
         $code = new OneAddressCode("RETURN", "$"+"XX", "INT");
+    };
+call_expr : id LPAREN expr_list RPAREN {
+        //TODO: set baseAddress, set offset
         currTable.addOneAddressCode("PUSH","","");
         String[] names = $expr_list.text.split(",");
         String type;
         for (String name : names) {
-            System.out.println(name);
             type = currTable.lookUpType(name);
             String lookUpName = currTable.lookUpVar(name);
             currTable.addOneAddressCode("PUSH", lookUpName, type);
@@ -252,7 +251,7 @@ call_expr returns[Code code]: id LPAREN expr_list RPAREN {
 };
 expr_list : expr expr_list_tail | /* empty */;
 expr_list_tail   returns [Code code] : COMMA expr expr_list_tail | /* empty */{
-
+    // set offset
 };
 primary  returns [Code code]
     : LPAREN expr RPAREN {
@@ -317,6 +316,7 @@ cond              : prevExpr=expr compop postExpr=expr {
     String label = currGraph.getClass() == IfGraph.class ? currGraph.getTopLabel() : currGraph.getOutLabel();
     ThreeAddressCode condCode = new ThreeAddressCode(Compop.toIRop($compop.text), op1, op2, label, type);
     codeList.add(condCode);
+    currTable.addThreeAddressCode(condCode);
 };
 compop            : '<' | '>' | '=' | '!=' | '<=' | '>=';
 
