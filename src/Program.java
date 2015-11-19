@@ -104,7 +104,12 @@ public class Program implements SymbolTable {
     }
 
     public void printTiny(){
-        this.printTiny();
+        this.printTinycode();
+    }
+
+    public void printTinycode(){
+            TinyCode tc = new TinyCode((ArrayList<Code>) this.getCodeList());
+            tc.toTinyCode();
     }
 
     public void printCodeList(){
