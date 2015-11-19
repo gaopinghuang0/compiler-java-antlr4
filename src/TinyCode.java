@@ -1,6 +1,3 @@
-import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
-
-import java.lang.reflect.Array;
 import java.util.*;
 
 /**
@@ -54,15 +51,19 @@ public class TinyCode {
     }
 
     public void handleOneAddress(Code c) {
-        //LABEL READ WRITE
+        //LABEL JUMP READ WRITE
         String op = c.getOpcode();
-        if(op.equals("LABEL") ){
-            System.out.println( getTinyOpcode(op) + " " + c.getResult());
-        }else if(op.equals("JUMP")){
-            System.out.println( getTinyOpcode(op).replace("u","") + " " +c.getResult());
-        }
-        else{
-            System.out.println("sys "+ getTinyOpcode(c.getOpcode()) + " " + c.getResult());
+
+        switch (op) {
+            case "LABEL":
+                System.out.println(getTinyOpcode(op) + " " + c.getResult());
+                break;
+            case "JUMP":
+                System.out.println( getTinyOpcode(op).replace("u","") + " " +c.getResult());
+                break;
+            default:
+                System.out.println("sys "+ getTinyOpcode(c.getOpcode()) + " " + c.getResult());
+                break;
         }
     }
 
@@ -76,15 +77,12 @@ public class TinyCode {
         } else {
             reg = nextReg();
             System.out.println("move " + op1 + " " + reg);
-            if(result.startsWith("$T") == false){
+            if(!result.startsWith("$T")){
                 System.out.println("move "+reg+" "+result);
             }
             map.put(c.getResult(), reg);
         }
     }
-//;ADDI $T5 $T8 $T9
-//move 20 r6
-//addi r6 r4
 
     public void handleThreeAddress(Code c) {
         String op1 = c.getOp1();
@@ -92,7 +90,7 @@ public class TinyCode {
         String op = c.getOpcode();
         String type = c.getType();
         String reg = "";
-        String[] operationList = new String[] {"ADDI","ADDF","SUBI","SUBF","MULTI","MULTF","DIVI","DIVF"};
+        String[] operationList = {"ADDI","ADDF","SUBI","SUBF","MULTI","MULTF","DIVI","DIVF"};
         if (Arrays.asList(operationList).contains(op)){
             if (op1.startsWith("$T")) {
                 reg = lookUpMap(op1);
@@ -103,24 +101,21 @@ public class TinyCode {
             op2 = op2.startsWith("$T") ? lookUpMap(op2) : op2;
             System.out.println(getTinyOpcode(c.getOpcode()) + " " + op2 + " " + reg);
             map.put(c.getResult(), reg);
-
-        }else{
-
-            if ((op2.startsWith("$T") || op2.startsWith("r")) == false){
+        } else {
+            if (!(op2.startsWith("$T") || op2.startsWith("r"))){
                 reg = nextReg();
                 System.out.println("move " + op2 + " " + reg);
                 map.put(op2, reg);
             }
             op2 = op2.startsWith("r") ? op2 : lookUpMap(op2);
 
-            if(type.equals("INT")){
+            if (type.equals("INT")){
                 System.out.println("cmpi " + op1 + " " + op2);
             }
             else if(type.equals("FLOAT")){
                 System.out.println("cmpr " + op1 + " " + op2);
             }
-            System.out.println("j"+op.toLowerCase() + " " + c.getResult());
-
+            System.out.println("j" + op.toLowerCase() + " " + c.getResult());
         }
 
     }
@@ -130,13 +125,19 @@ public class TinyCode {
         if (op.equals("mul") || op.equals("div") || op.equals("add") || op.equals("sub")) {
             op += opcode.endsWith("F") ? "r" : "i";
         } else if (opcode.startsWith("READ")) {
-            op = opcode.endsWith("F") ? "readr" : "readi";
+            if (opcode.endsWith("F")){
+                op = "readr";
+            } else if (opcode.endsWith("I")){
+                op = "readi";
+            } else {
+                op = "reads";
+            }
         } else if (opcode.startsWith("WRITE")) {
-            if(opcode.endsWith("F")){
+            if (opcode.endsWith("F")){
                 op = "writer";
-            }else if(opcode.endsWith("I")){
+            } else if (opcode.endsWith("I")){
                 op = "writei";
-            }else{
+            } else {
                 op = "writes";
             }
         } else if (opcode.equals("LABEL") || opcode.equals("JUMP")){
