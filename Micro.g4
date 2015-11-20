@@ -74,7 +74,7 @@ func_decl
         // if not a "RET" instruction, append one at the end
         List cl = currTable.getCodeList();
         Code c = (Code)cl.get(cl.size()-1);
-        if (!c.toIR().equals("RET")) {
+        if (!c.toIR().startsWith("RET")) {
             Code endCode = new OneAddressCode("RET","","");
             currTable.addCode(endCode);
         }
@@ -292,8 +292,7 @@ primary  returns [Code code]
         $code = new OneAddressCode(var, type);
     }
     | INTLITERAL {
-
-        // auto-increment
+        // auto-increment temporary counter
         $code = currTable.addTwoAddressCode("STOREI", $INTLITERAL.text, "INT");
         codeList.add($code);
     }
@@ -350,13 +349,14 @@ incr_stmt         : assign_expr | /* empty */;
 /* ECE 573 students use this version of for_stmt */
 for_stmt
     : {
-        symbolStack.push(currTable);
-        currTable = new Block(currTable);
+//        symbolStack.push(currTable);
+//        currTable = new Block(currTable);
     } FOR LPAREN init_stmt {
         graphStack.push(currGraph);
         currGraph = new ForGraph();
         OneAddressCode topCode = new OneAddressCode("LABEL", currGraph.getTopLabel(), "labelType");
-        codeList.add(topCode);
+//        codeList.add(topCode);
+        currTable.addCode(topCode);
     } SEMI cond SEMI {
         // before entering incr_stmt, store size of codeList
         currGraph.setStartSize(currTable.getCodeList().size());
@@ -371,16 +371,22 @@ for_stmt
         Collections.reverse(tempList);
         currGraph.setIncrCodeList(tempList);
     } RPAREN decl aug_stmt_list ROF {
-       currTable.getParent().addChild(currTable);
-       currTable = symbolStack.pop();
+//       currTable.getParent().addChild(currTable);
+//       currTable = symbolStack.pop();
+
+//       codeList.add(new OneAddressCode("LABEL", currGraph.getIncrLabel(), "labelType"));
+//       codeList.addAll(currGraph.getIncrCodeList());
 
        // increment label and append increment_statement
-       codeList.add(new OneAddressCode("LABEL", currGraph.getIncrLabel(), "labelType"));
-       codeList.addAll(currGraph.getIncrCodeList());
+       currTable.addCode(new OneAddressCode("LABEL", currGraph.getIncrLabel(), "labelType"));
        currTable.getCodeList().addAll(currGraph.getIncrCodeList());
+
+//       codeList.add(new OneAddressCode("JUMP", currGraph.getTopLabel(), "labelType"));
+//       codeList.add(new OneAddressCode("LABEL", currGraph.getOutLabel(), "labelType"));
+
        // jump to start of the loop (top label) then out label
-       codeList.add(new OneAddressCode("JUMP", currGraph.getTopLabel(), "labelType"));
-       codeList.add(new OneAddressCode("LABEL", currGraph.getOutLabel(), "labelType"));
+       currTable.addCode(new OneAddressCode("JUMP", currGraph.getTopLabel(), "labelType"));
+       currTable.addCode(new OneAddressCode("LABEL", currGraph.getOutLabel(), "labelType"));
        currGraph = graphStack.pop();
     };
 
