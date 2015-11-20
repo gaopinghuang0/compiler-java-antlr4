@@ -5,14 +5,12 @@
 ;STOREF $T1 $L1
 ;STOREF $L1 $R
 ;RET
-
 ;LABEL multiply
 ;LINK
 ;MULTF $P1 $P2 $T1
 ;STOREF $T1 $L1
 ;STOREF $L1 $R
 ;RET
-
 ;LABEL main
 ;LINK
 ;WRITES intro
@@ -49,7 +47,6 @@
 ;STOREI 0 $T3
 ;STOREI $T3 $R
 ;RET
-
 ;tiny code
 str intro "You will be asked for three float numbers\n"
 str first "Please enter the first float number: "
@@ -109,7 +106,7 @@ pop
 pop 
 pop r4
 move r4 $-5
-push 
+push
 push $-5
 push $-3
 push r0

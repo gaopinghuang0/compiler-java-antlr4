@@ -11,10 +11,13 @@ public interface SymbolTable {
     List<SymbolEntry> getCallExprList();
     void setScope(String scope);
     void addCallExprEntry(SymbolEntry entry);
+    int getParamId();
+    int getDeclId();
     void addElement(SymbolEntry e);
     void addChild(SymbolTable func);
     void printTable();
-    void printTiny();
+    void printIR();
+    void printTiny(int paramId, int localTemp);
     SymbolTable getParent();
     String lookUpType(String name);
     void addParamEntry(String name, String type);
