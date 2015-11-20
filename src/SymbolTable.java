@@ -8,10 +8,13 @@ public interface SymbolTable {
     ArrayList<SymbolEntry> getDecls();
     ArrayList<SymbolTable> getChildren();
     List<Code> getCodeList();
+    int getParamId();
+    int getDeclId();
     void addElement(SymbolEntry e);
     void addChild(SymbolTable func);
     void printTable();
-    void printTiny();
+    void printIR();
+    void printTiny(int paramId, int localTemp);
     SymbolTable getParent();
     String lookUpType(String name);
     void addParamEntry(String name, String type);

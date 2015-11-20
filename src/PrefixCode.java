@@ -1,21 +1,21 @@
 
 public class PrefixCode implements Code{
-    private String op;
-    private String id;
-    public PrefixCode(String op, String id)
+    private String Opcode;
+    private String op1;
+    public PrefixCode(String Opcode, String op1)
     {
-        this.op = op;
-        this.id = id;
+        this.Opcode = Opcode;
+        this.op1 = op1;
     }
 
     @Override
     public String toIR() {
-        return op + " " + id;
+        return Opcode + " " + op1;
     }
 
     @Override
     public String getOpcode() {
-        return null;
+        return this.Opcode;
     }
 
     @Override
@@ -30,7 +30,7 @@ public class PrefixCode implements Code{
 
     @Override
     public String getOp1() {
-        return null;
+        return this.op1;
     }
 
     @Override

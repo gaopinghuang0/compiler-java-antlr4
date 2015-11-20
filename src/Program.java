@@ -1,5 +1,4 @@
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by hgp on 10/2/2015.
@@ -17,6 +16,13 @@ public class Program implements SymbolTable {
         return decls;
     }
 
+    public int getParamId(){
+        return this.paramId;
+    }
+    @Override
+    public int getDeclId(){
+        return this.declId;
+    }
     public ArrayList<SymbolTable> getChildren() {
         return children;
     }
@@ -96,21 +102,20 @@ public class Program implements SymbolTable {
     public SymbolTable getParent() {
         return this.parent;
     }
-
-    public void printTable() {
-
-        //this.printDecl();
+    public void printIR(){
         this.printCodeList();
     }
+    public void printTable() {
 
-    public void printTiny(){
-        this.printTinycode();
+        this.printDecl();
+    }
+    public void printTiny(int paramId, int localTemp){
+            if(this.getCodeList().size()>0) {
+                TinyCode tc = new TinyCode(this.getCodeList(), paramId,localTemp);
+                tc.toTinyCode();
+            }
     }
 
-    public void printTinycode(){
-            TinyCode tc = new TinyCode((ArrayList<Code>) this.getCodeList());
-            tc.toTinyCode();
-    }
 
     public void printCodeList(){
 //        System.out.println(this.codeList)
@@ -124,7 +129,7 @@ public class Program implements SymbolTable {
             if (se.getType().equals("STRING")) {
                 System.out.println("str " + se.getName() + " " + se.getVariable() +" " + se.getValue());
             } else {
-                System.out.println("var " + " " + se.getVariable() + " " + se.getName());
+                //System.out.println("var " + " " + se.getVariable() + " " + se.getName());
             }
         }
     }

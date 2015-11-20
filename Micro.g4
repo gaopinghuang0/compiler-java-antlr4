@@ -238,7 +238,7 @@ call_expr returns[Code code]: id LPAREN expr_list RPAREN {
         String[] names = $expr_list.text.split(",");
         String type;
         for (String name : names) {
-            System.out.println(name);
+            //System.out.println(name);
             type = currTable.lookUpType(name);
             String lookUpName = currTable.lookUpVar(name);
             currTable.addOneAddressCode("PUSH", lookUpName, type);
