@@ -148,13 +148,26 @@ public class TinyCode {
 //            }
 //            op2 = op2.startsWith("r") ? op2 : lookUpMap(op2);
 //
-            if (type.equals("INT")){
-                System.out.println("cmpi " + getTinyTransform(op1) + " " + getTinyTransform(op2));
+            if(op2.startsWith("$L")) {
+                reg = getNextReg();
+                System.out.println("move " + getTinyTransform(op2) + " " + reg);
+                if (type.equals("INT")){
+                    System.out.println("cmpi " + getTinyTransform(op1) + " " + reg);
+                }
+                else if(type.equals("FLOAT")){
+                    System.out.println("cmpr " + getTinyTransform(op1) + " " + reg);
+                }
+                System.out.println("j" + op.toLowerCase() + " " + getTinyTransform(c.getResult()));
+            }else{
+
+                if (type.equals("INT")){
+                    System.out.println("cmpi " + getTinyTransform(op1) + " " + getTinyTransform(op2));
+                }
+                else if(type.equals("FLOAT")){
+                    System.out.println("cmpr " + getTinyTransform(op1) + " " + getTinyTransform(op2));
+                }
+                System.out.println("j" + op.toLowerCase() + " " + getTinyTransform(c.getResult()));
             }
-            else if(type.equals("FLOAT")){
-                System.out.println("cmpr " + getTinyTransform(op1) + " " + getTinyTransform(op2));
-            }
-            System.out.println("j" + op.toLowerCase() + " " + getTinyTransform(c.getResult()));
         }
 
     }
