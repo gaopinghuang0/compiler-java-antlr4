@@ -42,7 +42,10 @@ public class Micro {
         table.printTable();
 
         for (SymbolTable st : table.getChildren()) {
-            printSymbolTable(st);
+            // do not print block-level codeList
+            if (st.getClass() != Block.class) {
+                printSymbolTable(st);
+            }
         }
     }
 

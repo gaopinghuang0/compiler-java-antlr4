@@ -4,10 +4,13 @@ import java.util.*;
  * Created by hgp on 10/2/2015.
  */
 public interface SymbolTable {
-    void setScope(String scope);
+    String getScope();
     ArrayList<SymbolEntry> getDecls();
     ArrayList<SymbolTable> getChildren();
     List<Code> getCodeList();
+    List<Integer> getOffsetList();
+    void setScope(String scope);
+    void addOffset(int offset);
     void addElement(SymbolEntry e);
     void addChild(SymbolTable func);
     void printTable();

@@ -62,18 +62,14 @@ func_decl
     : {
         symbolStack.push(currTable);
         currTable = new Function(currTable);
-    } FUNCTION any_type id LPAREN param_decl_list RPAREN BEGIN func_body END {
-        //System.out.print("LABEL " + $id.text);
-        Code prefix1 = new PrefixCode("LABEL",$id.text);
-        Code prefix2 = new PrefixCode("LINK","");
-        // add prefix code at the beginning fo array
-        currTable.addFirst(prefix2);
-        currTable.addFirst(prefix1);
-
-       // System.out.println(currTable.getCodeList());
-
-        //codeList.add(currTable.getCodeList());
-      //  System.out.println(codeList);
+    } FUNCTION any_type id {
+        String type = $any_type.text;
+        OneAddressCode code1 = new OneAddressCode("LABEL", $id.text, type);
+        OneAddressCode code2 = new OneAddressCode("LINK", "", type);
+        currTable.addCode(code1);
+        currTable.addCode(code2);
+    }
+    LPAREN param_decl_list RPAREN BEGIN func_body END {
         currTable.setScope($id.text);
         currTable.getParent().addChild(currTable);
         currTable = symbolStack.pop();
@@ -232,11 +228,26 @@ postfix_expr  returns [Code code]
         // mock a code for global codeList, no real use
         $code = new OneAddressCode("RETURN", "$"+"XX", "INT");
     };
-call_expr : id LPAREN expr_list RPAREN {
-        //TODO: set baseAddress, set offset
+call_expr : id {
+        // set base address with the current codeList size
+        int size = currTable.getCodeList().size();
+        System.out.println("current scope: "+ currTable.getScope());
+        System.out.println("base address: " + size);
+        currTable.addOffset(size);
+} LPAREN expr_list RPAREN {
         currTable.addOneAddressCode("PUSH","","");
+        List<Integer> localList = currTable.getOffsetList();
+        for (int offset: localList) {
+            // TODO: use offset - base address
+            System.out.println("offset: "+offset);
+            if (offset > 1) {
+            String result = currTable.getCodeList().get(offset-1).getResult();
+            System.out.println("result: "+result);
+            }
+        }
         String[] names = $expr_list.text.split(",");
         String type;
+        System.out.println("current scope: "+ currTable.getScope());
         for (String name : names) {
             type = currTable.lookUpType(name);
             String lookUpName = currTable.lookUpVar(name);
@@ -249,10 +260,17 @@ call_expr : id LPAREN expr_list RPAREN {
         }
         currTable.addOneAddressCode("POP","","", true);
 };
-expr_list : expr expr_list_tail | /* empty */;
-expr_list_tail   returns [Code code] : COMMA expr expr_list_tail | /* empty */{
+expr_list : expr {
+    // set first offset of call expr
+    int size = currTable.getCodeList().size();
+    currTable.addOffset(size);
+} expr_list_tail | /* empty */;
+expr_list_tail : COMMA expr {
     // set offset
-};
+    int size = currTable.getCodeList().size();
+    currTable.addOffset(size);
+} expr_list_tail | /* empty */;
+
 primary  returns [Code code]
     : LPAREN expr RPAREN {
         $code = $expr.code;
@@ -288,15 +306,23 @@ if_stmt
     } IF LPAREN cond RPAREN decl stmt_list {
         OneAddressCode midCode = new OneAddressCode("JUMP", currGraph.getOutLabel(), "labelType");
         codeList.add(midCode);
+        currTable.addCode(midCode);
         midCode = new OneAddressCode("LABEL", currGraph.getTopLabel(), "labelType");
         codeList.add(midCode);
+        currTable.addCode(midCode);
     } else_part FI {
-        currTable.getParent().addChild(currTable);
-        currTable = symbolStack.pop();
-
         // out label
         OneAddressCode endCode = new OneAddressCode("LABEL", currGraph.getOutLabel(), "labelType");
         codeList.add(endCode);
+        currTable.addCode(endCode);
+
+        // important: add currTable (block-level) codeList to parent's codeList, so that eventually
+        // function-level codeList will contain complete code in the right order,
+        // so when print codeList, do not print block-level codeList, just function-level
+        currTable.getParent().getCodeList().addAll(currTable.getCodeList());
+
+        currTable.getParent().addChild(currTable);
+        currTable = symbolStack.pop();
         currGraph = graphStack.pop();
     };
 else_part
@@ -304,10 +330,15 @@ else_part
         symbolStack.push(currTable);
         currTable = new Block(currTable);
     } ELSE decl stmt_list {
+        // end of else_part, jump to out label
+        OneAddressCode elseCode = new OneAddressCode("JUMP", currGraph.getOutLabel(), "labelType");
+        codeList.add(elseCode);
+        currTable.addCode(elseCode);
+
+        // important: add currTable (block-level) codeList to parent's codeList
+        currTable.getParent().getCodeList().addAll(currTable.getCodeList());
         currTable.getParent().addChild(currTable);
         currTable = symbolStack.pop();
-        // end of else_part, jump to out label
-        codeList.add(new OneAddressCode("JUMP", currGraph.getOutLabel(), "labelType"));
     }| /* empty */;
 cond              : prevExpr=expr compop postExpr=expr {
     String op1 = $prevExpr.code.getResult();
@@ -316,7 +347,8 @@ cond              : prevExpr=expr compop postExpr=expr {
     String label = currGraph.getClass() == IfGraph.class ? currGraph.getTopLabel() : currGraph.getOutLabel();
     ThreeAddressCode condCode = new ThreeAddressCode(Compop.toIRop($compop.text), op1, op2, label, type);
     codeList.add(condCode);
-    currTable.addThreeAddressCode(condCode);
+    // just add it with label already generated
+    currTable.addCode(condCode);
 };
 compop            : '<' | '>' | '=' | '!=' | '<=' | '>=';
 

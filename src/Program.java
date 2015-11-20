@@ -13,6 +13,12 @@ public class Program implements SymbolTable {
     private int declId = 1;
     private int localTemp = 1;
     private List<Code> codeList = new ArrayList<>();
+    private List<Integer> offsetList = new ArrayList<>();
+
+    public String getScope() {
+        return scope;
+    }
+
     public ArrayList<SymbolEntry> getDecls() {
         return decls;
     }
@@ -25,12 +31,19 @@ public class Program implements SymbolTable {
         return codeList;
     }
 
+    public List<Integer> getOffsetList() {
+        return offsetList;
+    }
+
+    public void addOffset(int offset) {
+        this.getOffsetList().add(offset);
+    }
+
     public void addCode(Code c){
         this.getCodeList().add(c);
     }
     public void addFirst(Code c){
         this.getCodeList().add(0,c);
-
     }
     public void addOneAddressCode(String opcode, String result, String type){
         Code oneAddressCode = new OneAddressCode(opcode, result, type);

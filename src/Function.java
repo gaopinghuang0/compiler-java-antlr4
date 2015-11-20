@@ -13,14 +13,18 @@ public class Function extends Program implements SymbolTable {
     private int localTemp = 1;
     private List<Code> codeList = new ArrayList<>();
 
+    public String getScope() {
+        return scope;
+    }
+
     public Function(SymbolTable parent) {
         this.parent = parent;
     }
 
+
     public void setScope(String scope) {
         this.scope = scope;
     }
-
 
     public ArrayList<SymbolEntry> getDecls() {
         return decls;
@@ -33,8 +37,6 @@ public class Function extends Program implements SymbolTable {
     public List<Code> getCodeList() {
         return codeList;
     }
-
-
 
     @Override
     public SymbolTable getParent() {
