@@ -70,6 +70,15 @@ func_decl
         currTable.addCode(code2);
     }
     LPAREN param_decl_list RPAREN BEGIN func_body END {
+        // in case of no return stmt at the end, check the last IR node
+        // if not a "RET" instruction, append one at the end
+        List cl = currTable.getCodeList();
+        Code c = (Code)cl.get(cl.size()-1);
+        if (!c.toIR().equals("RET")) {
+            Code endCode = new OneAddressCode("RET","","");
+            currTable.addCode(endCode);
+        }
+
         currTable.setScope($id.text);
         currTable.getParent().addChild(currTable);
         currTable = symbolStack.pop();
@@ -94,8 +103,8 @@ assign_expr       : id ASSIGN expr {
             System.out.println("in assign_expr"+$expr.text);
         }
         String var = currTable.lookUpVar($id.text);
-        List a = currTable.getCodeList();
-        Code c = (Code)a.get(a.size()-1);
+        List cl = currTable.getCodeList();
+        Code c = (Code)cl.get(cl.size()-1);
         Code code = new TwoAddressCode(opcode, c.getResult(), var, type);
         codeList.add(code);
         // non-auto-increment, use addCode
