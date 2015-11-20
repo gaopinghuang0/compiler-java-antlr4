@@ -7,7 +7,6 @@ grammar Micro;
 @members {
     SymbolTable currTable = null;
     CostomStack<SymbolTable> symbolStack = new CostomStack<>();
-    ArrayList<Code> codeList = new ArrayList<>();
     CostomStack<Graph> graphStack = new CostomStack<>();
     Graph currGraph = null;
 }
@@ -17,7 +16,6 @@ program  returns [ReturnData data]
     : PROGRAM id BEGIN pgm_body END {
         ReturnData data = new ReturnData();
         data.setTable($pgm_body.table);
-        data.setCodeList(codeList);
         data.setTableStack(symbolStack);
         $data = data;
     };
@@ -106,7 +104,6 @@ assign_expr       : id ASSIGN expr {
         List cl = currTable.getCodeList();
         Code c = (Code)cl.get(cl.size()-1);
         Code code = new TwoAddressCode(opcode, c.getResult(), var, type);
-        codeList.add(code);
         // non-auto-increment, use addCode
         currTable.addCode(code);
     };
@@ -123,9 +120,6 @@ read_stmt
            } else {
                op = "READS";
            }
-           Code c = new OneAddressCode(op, name, type);
-           codeList.add(c);
-           //System.out.println(currTable.lookUpVar(name));
            String lookUpName = currTable.lookUpVar(name);
            currTable.addOneAddressCode(op, lookUpName, type);
        }
@@ -146,8 +140,6 @@ write_stmt
                op = "WRITES";
 
            }
-           Code c = new OneAddressCode(op, name, type);
-           codeList.add(c);
            currTable.addOneAddressCode(op, name, type);
        }
     };
@@ -170,10 +162,8 @@ expr  returns [Code code]
         String type = f.getType();
         if (e != null && type != null) {
             String op = e.getOpcode();
-//            $code = new ThreeAddressCode(op, e.getResult(), f.getResult(), type);
             // auto-increment, use addThree...
             $code = currTable.addThreeAddressCode(op, e.getResult(), f.getResult(), type);
-            codeList.add($code);
         } else {
             $code = f;
         }
@@ -187,12 +177,13 @@ expr_prefix  returns [Code code]
         } else {
             op = type.equals("INT") ? "SUBI" : "SUBF";
         }
-        if ($ep.code != null) {
-            $code = new ThreeAddressCode($ep.code.getOpcode(), $ep.code.getResult(),
+        if ($ep.code != null) {  // complex expression
+            //TODO: re-check this later: whether need to append to local codeList?
+            currTable.addThreeAddressCode($ep.code.getOpcode(), $ep.code.getResult(),
                     $factor.code.getResult(), type);
-            codeList.add($code);
             $code = new OneAddressCode(op, $code.getResult(), type);
         } else {
+            // TODO: re-check this later: whether need to append to local codeList?
             $code = new OneAddressCode(op, $factor.code.getResult(), type);
         }
     }| /* empty */;
@@ -203,9 +194,7 @@ factor  returns [Code code]
         String type = p.getType();
         if (f != null && type != null) {
             String op = f.getOpcode();
-            $code = new ThreeAddressCode(op, f.getResult(), p.getResult(), type);
-            currTable.addThreeAddressCode(op, f.getResult(), p.getResult(), type);
-            codeList.add($code);
+            $code = currTable.addThreeAddressCode(op, f.getResult(), p.getResult(), type);
         } else {
             $code = p;
         }
@@ -220,12 +209,11 @@ factor_prefix  returns [Code code]
             op = type.equals("INT") ? "DIVI" : "DIVF";
         }
         if ($fp.code != null) {
-            $code = new ThreeAddressCode($fp.code.getOpcode(), $fp.code.getResult(),
-                    $postfix_expr.code.getResult(), type);
-            codeList.add($code);
+            //TODO: re-check this later: whether need to append to local codeList?
             currTable.addThreeAddressCode($fp.code.getOpcode(), $fp.code.getResult(),$postfix_expr.code.getResult(), type);
             $code = new OneAddressCode(op, $code.getResult(), type);
         } else {
+            //TODO: re-check this later: whether need to append to local codeList?
             $code = new OneAddressCode(op, $postfix_expr.code.getResult(), type);
         }
     }| /* empty */;
@@ -294,12 +282,9 @@ primary  returns [Code code]
     | INTLITERAL {
         // auto-increment temporary counter
         $code = currTable.addTwoAddressCode("STOREI", $INTLITERAL.text, "INT");
-        codeList.add($code);
     }
     | FLOATLITERAL {
-        $code = new TwoAddressCode("STOREF", $FLOATLITERAL.text, "FLOAT");
-        codeList.add($code);
-        currTable.addTwoAddressCode("STOREF", $FLOATLITERAL.text, "FLOAT");
+        $code = currTable.addTwoAddressCode("STOREF", $FLOATLITERAL.text, "FLOAT");
     };
 addop             : '+' | '-';
 mulop             : '*' | '/';
@@ -311,15 +296,12 @@ if_stmt
         currGraph = new IfGraph();
     } IF LPAREN cond RPAREN decl stmt_list {
         OneAddressCode midCode = new OneAddressCode("JUMP", currGraph.getOutLabel(), "labelType");
-        codeList.add(midCode);
         currTable.addCode(midCode);
         midCode = new OneAddressCode("LABEL", currGraph.getTopLabel(), "labelType");
-        codeList.add(midCode);
         currTable.addCode(midCode);
     } else_part FI {
         // out label
         OneAddressCode endCode = new OneAddressCode("LABEL", currGraph.getOutLabel(), "labelType");
-        codeList.add(endCode);
         currTable.addCode(endCode);
         currGraph = graphStack.pop();
     };
@@ -327,7 +309,6 @@ else_part
     : ELSE decl stmt_list {
         // end of else_part, jump to out label
         OneAddressCode elseCode = new OneAddressCode("JUMP", currGraph.getOutLabel(), "labelType");
-        codeList.add(elseCode);
         currTable.addCode(elseCode);
     }| /* empty */;
 cond              : prevExpr=expr compop postExpr=expr {
@@ -336,7 +317,6 @@ cond              : prevExpr=expr compop postExpr=expr {
     String op2 = $postExpr.code.getResult();
     String label = currGraph.getClass() == IfGraph.class ? currGraph.getTopLabel() : currGraph.getOutLabel();
     ThreeAddressCode condCode = new ThreeAddressCode(Compop.toIRop($compop.text), op1, op2, label, type);
-    codeList.add(condCode);
     // just add it with label already generated
     currTable.addCode(condCode);
 };
@@ -348,14 +328,10 @@ incr_stmt         : assign_expr | /* empty */;
 
 /* ECE 573 students use this version of for_stmt */
 for_stmt
-    : {
-//        symbolStack.push(currTable);
-//        currTable = new Block(currTable);
-    } FOR LPAREN init_stmt {
+    : FOR LPAREN init_stmt {
         graphStack.push(currGraph);
         currGraph = new ForGraph();
         OneAddressCode topCode = new OneAddressCode("LABEL", currGraph.getTopLabel(), "labelType");
-//        codeList.add(topCode);
         currTable.addCode(topCode);
     } SEMI cond SEMI {
         // before entering incr_stmt, store size of codeList
@@ -371,18 +347,9 @@ for_stmt
         Collections.reverse(tempList);
         currGraph.setIncrCodeList(tempList);
     } RPAREN decl aug_stmt_list ROF {
-//       currTable.getParent().addChild(currTable);
-//       currTable = symbolStack.pop();
-
-//       codeList.add(new OneAddressCode("LABEL", currGraph.getIncrLabel(), "labelType"));
-//       codeList.addAll(currGraph.getIncrCodeList());
-
        // increment label and append increment_statement
        currTable.addCode(new OneAddressCode("LABEL", currGraph.getIncrLabel(), "labelType"));
        currTable.getCodeList().addAll(currGraph.getIncrCodeList());
-
-//       codeList.add(new OneAddressCode("JUMP", currGraph.getTopLabel(), "labelType"));
-//       codeList.add(new OneAddressCode("LABEL", currGraph.getOutLabel(), "labelType"));
 
        // jump to start of the loop (top label) then out label
        currTable.addCode(new OneAddressCode("JUMP", currGraph.getTopLabel(), "labelType"));
@@ -395,44 +362,34 @@ aug_stmt_list     : aug_stmt aug_stmt_list | /* empty */;
 aug_stmt          : base_stmt | aug_if_stmt | for_stmt | CONTINUE SEMI {
     // continue, jump to innermost for_loop increment label
     Graph tempGraph = graphStack.lastIndexOfClass(ForGraph.class);
-    codeList.add(new OneAddressCode("JUMP", tempGraph.getIncrLabel(), "labelType"));
+    currTable.addCode(new OneAddressCode("JUMP", tempGraph.getIncrLabel(), "labelType"));
 } | BREAK SEMI {
     // break, jump to innermost for_loop out label
     Graph tempGraph = graphStack.lastIndexOfClass(ForGraph.class);
-    codeList.add(new OneAddressCode("JUMP", tempGraph.getOutLabel(), "labelType"));
+    currTable.addCode(new OneAddressCode("JUMP", tempGraph.getOutLabel(), "labelType"));
 };
 
 /* Augmented IF statements for ECE 573 students */
 aug_if_stmt
     : {
-        symbolStack.push(currTable);
-        currTable = new Block(currTable);
-
         graphStack.push(currGraph);
         currGraph = new IfGraph();
     } IF LPAREN cond RPAREN decl aug_stmt_list {
         OneAddressCode midCode = new OneAddressCode("JUMP", currGraph.getOutLabel(), "labelType");
-        codeList.add(midCode);
-        midCode = new OneAddressCode("LABEL", currGraph.getTopLabel(), "labelType");
-        codeList.add(midCode);
-    } aug_else_part FI {
-        currTable.getParent().addChild(currTable);
-        currTable = symbolStack.pop();
+        currTable.addCode(midCode);
 
-        // out label
+        midCode = new OneAddressCode("LABEL", currGraph.getTopLabel(), "labelType");
+        currTable.addCode(midCode);
+    } aug_else_part FI {
+      // out label
         OneAddressCode endCode = new OneAddressCode("LABEL", currGraph.getOutLabel(), "labelType");
-        codeList.add(endCode);
+        currTable.addCode(endCode);
         currGraph = graphStack.pop();
     };
 aug_else_part
-    : {
-         symbolStack.push(currTable);
-         currTable = new Block(currTable);
-    } ELSE decl aug_stmt_list {
-        currTable.getParent().addChild(currTable);
-        currTable = symbolStack.pop();
+    : ELSE decl aug_stmt_list {
         // end of else_part, jump to out label
-        codeList.add(new OneAddressCode("JUMP", currGraph.getOutLabel(), "labelType"));
+        currTable.addCode(new OneAddressCode("JUMP", currGraph.getOutLabel(), "labelType"));
     }| /* empty */;
 
 

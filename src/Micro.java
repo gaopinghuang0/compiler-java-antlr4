@@ -20,9 +20,7 @@ public class Micro {
             MicroParser parser = new MicroParser(tokens);
             ReturnData data = parser.program().data;
 
-//            printIR(data.getCodeList());
             System.out.println(";IR code");
-
             printIRcode(data.getTable());
             System.out.println(";tiny code");
             printSymbolTable(data.getTable());
