@@ -13,7 +13,7 @@ public class Program implements SymbolTable {
     private int declId = 1;
     private int localTemp = 1;
     private List<Code> codeList = new ArrayList<>();
-    private List<Integer> offsetList = new ArrayList<>();
+    private List<SymbolEntry> callExprList = new ArrayList<>();
 
     public String getScope() {
         return scope;
@@ -31,49 +31,53 @@ public class Program implements SymbolTable {
         return codeList;
     }
 
-    public List<Integer> getOffsetList() {
-        return offsetList;
+    public List<SymbolEntry> getCallExprList() {
+        return callExprList;
     }
 
-    public void addOffset(int offset) {
-        this.getOffsetList().add(offset);
+    public void addCallExprEntry(SymbolEntry entry) {
+        this.getCallExprList().add(entry);
     }
 
     public void addCode(Code c){
         this.getCodeList().add(c);
     }
-    public void addFirst(Code c){
-        this.getCodeList().add(0,c);
-    }
-    public void addOneAddressCode(String opcode, String result, String type){
-        Code oneAddressCode = new OneAddressCode(opcode, result, type);
-        this.getCodeList().add(oneAddressCode);
+
+    public Code addOneAddressCode(String opcode, String result, String type){
+        Code localCode = new OneAddressCode(opcode, result, type);
+        this.getCodeList().add(localCode);
+        return localCode;
     }
 
-    public void addOneAddressCode(String opcode, String result, String type, boolean getNext){
+    public Code addOneAddressCode(String opcode, String result, String type, boolean getNext){
         if (getNext) {
             result = this.getNextLocalTemp();
         }
-        Code oneAddressCode = new OneAddressCode(opcode, result, type);
-        this.getCodeList().add(oneAddressCode);
+        Code localCode = new OneAddressCode(opcode, result, type);
+        this.getCodeList().add(localCode);
+        return localCode;
     }
 
-    public void addTwoAddressCode(String opcode, String op1, String type){
+    public Code addTwoAddressCode(String opcode, String op1, String type){
         String local = this.getNextLocalTemp();
         Code localCode = new TwoAddressCode(opcode, op1, local, type);
         this.getCodeList().add(localCode);
+        return localCode;
     }
-    public void addResultAddressCode(String opcode, String op1,String type){
+
+    public Code addResultAddressCode(String opcode, String op1,String type){
         Code reusltCode = new TwoAddressCode(opcode,op1,"$R",type);
         Code endCode = new OneAddressCode("RET","","");
         this.getCodeList().add(reusltCode);
         this.getCodeList().add(endCode);
+        return reusltCode;
     }
 
-    public void addThreeAddressCode(String opcode, String op1, String op2, String type) {
+    public Code addThreeAddressCode(String opcode, String op1, String op2, String type) {
         String local = this.getNextLocalTemp();
         Code localCode = new ThreeAddressCode(opcode, op1, op2, local, type);
         this.getCodeList().add(localCode);
+        return localCode;
     }
 
     public void setScope(String Scope){ this.scope = scope; };
@@ -156,7 +160,7 @@ public class Program implements SymbolTable {
                 }
             }
         }
-        System.out.println("Warning, cannot find its type: "+name);
+        System.err.println("Warning, cannot find its type: "+name);
         return null;
     }
 
@@ -174,8 +178,7 @@ public class Program implements SymbolTable {
                 }
             }
         }
-        System.out.println("Warning, cannot find its type: "+name);
-        return name;
+        return null;
     }
 
     public String getNextParamId() {

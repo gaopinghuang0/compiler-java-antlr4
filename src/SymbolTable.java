@@ -8,9 +8,9 @@ public interface SymbolTable {
     ArrayList<SymbolEntry> getDecls();
     ArrayList<SymbolTable> getChildren();
     List<Code> getCodeList();
-    List<Integer> getOffsetList();
+    List<SymbolEntry> getCallExprList();
     void setScope(String scope);
-    void addOffset(int offset);
+    void addCallExprEntry(SymbolEntry entry);
     void addElement(SymbolEntry e);
     void addChild(SymbolTable func);
     void printTable();
@@ -21,10 +21,9 @@ public interface SymbolTable {
     String lookUpVar(String name);
     void addDeclEntry(String name, String type);
     void addCode(Code c);
-    void addFirst(Code c);
-    void addOneAddressCode(String opcode, String result, String type);
-    void addOneAddressCode(String opcode, String result, String type, boolean getNext);
-    void addTwoAddressCode(String opcode, String op1, String type);
-    void addThreeAddressCode(String opcode, String op1, String op2, String type);
-    void addResultAddressCode(String opcode, String op1,String type);
+    Code addOneAddressCode(String opcode, String result, String type);
+    Code addOneAddressCode(String opcode, String result, String type, boolean getNext);
+    Code addTwoAddressCode(String opcode, String op1, String type);
+    Code addThreeAddressCode(String opcode, String op1, String op2, String type);
+    Code addResultAddressCode(String opcode, String op1,String type);
 }

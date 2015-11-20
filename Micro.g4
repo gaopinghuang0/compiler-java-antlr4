@@ -161,10 +161,10 @@ expr  returns [Code code]
         String type = f.getType();
         if (e != null && type != null) {
             String op = e.getOpcode();
-            $code = new ThreeAddressCode(op, e.getResult(), f.getResult(), type);
-            codeList.add($code);
+//            $code = new ThreeAddressCode(op, e.getResult(), f.getResult(), type);
             // auto-increment, use addThree...
-            currTable.addThreeAddressCode(op, e.getResult(), f.getResult(), type);
+            $code = currTable.addThreeAddressCode(op, e.getResult(), f.getResult(), type);
+            codeList.add($code);
         } else {
             $code = f;
         }
@@ -228,47 +228,48 @@ postfix_expr  returns [Code code]
         // mock a code for global codeList, no real use
         $code = new OneAddressCode("RETURN", "$"+"XX", "INT");
     };
-call_expr : id {
-        // set base address with the current codeList size
-        int size = currTable.getCodeList().size();
-        System.out.println("current scope: "+ currTable.getScope());
-        System.out.println("base address: " + size);
-        currTable.addOffset(size);
-} LPAREN expr_list RPAREN {
+call_expr : id LPAREN expr_list RPAREN {
         currTable.addOneAddressCode("PUSH","","");
-        List<Integer> localList = currTable.getOffsetList();
-        for (int offset: localList) {
-            // TODO: use offset - base address
-            System.out.println("offset: "+offset);
-            if (offset > 1) {
-            String result = currTable.getCodeList().get(offset-1).getResult();
-            System.out.println("result: "+result);
-            }
-        }
-        String[] names = $expr_list.text.split(",");
-        String type;
-        System.out.println("current scope: "+ currTable.getScope());
-        for (String name : names) {
-            type = currTable.lookUpType(name);
-            String lookUpName = currTable.lookUpVar(name);
-            currTable.addOneAddressCode("PUSH", lookUpName, type);
+        List<SymbolEntry> callExprList = currTable.getCallExprList();
+
+        for (SymbolEntry se : callExprList) {
+            currTable.addOneAddressCode("PUSH", se.getName(), se.getType());
         }
         currTable.addOneAddressCode("JSR", $id.text, "LABEL");
-        for (String name: names) {
-            type = currTable.lookUpType(name);
-            currTable.addOneAddressCode("POP", "", type);
+        for (SymbolEntry se : callExprList) {
+            currTable.addOneAddressCode("POP", "", se.getType());
         }
+        // clear the callExprList after this function call
+        currTable.getCallExprList().clear();
         currTable.addOneAddressCode("POP","","", true);
 };
 expr_list : expr {
-    // set first offset of call expr
-    int size = currTable.getCodeList().size();
-    currTable.addOffset(size);
+    // add callExpr entry based on whether primary id or expression
+    String name = currTable.lookUpVar($expr.text);
+    SymbolEntry se;
+    if (name != null) {  // primary id
+        String type = currTable.lookUpType($expr.text);
+        se = new SymbolEntry(name, type);
+    } else {  // expression
+        int size = currTable.getCodeList().size();
+        Code c = currTable.getCodeList().get(size-1);
+        se = new SymbolEntry(c.getResult(), c.getType());
+    }
+    currTable.addCallExprEntry(se);
 } expr_list_tail | /* empty */;
 expr_list_tail : COMMA expr {
-    // set offset
-    int size = currTable.getCodeList().size();
-    currTable.addOffset(size);
+    // add callExpr entry based on whether primary id or expression
+    String name = currTable.lookUpVar($expr.text);
+    SymbolEntry se;
+    if (name != null) {  // primary id
+        String type = currTable.lookUpType($expr.text);
+        se = new SymbolEntry(name, type);
+    } else {  // expression
+        int size = currTable.getCodeList().size();
+        Code c = currTable.getCodeList().get(size-1);
+        se = new SymbolEntry(c.getResult(), c.getType());
+    }
+    currTable.addCallExprEntry(se);
 } expr_list_tail | /* empty */;
 
 primary  returns [Code code]
@@ -283,10 +284,9 @@ primary  returns [Code code]
     }
     | INTLITERAL {
 
-        $code = new TwoAddressCode("STOREI", $INTLITERAL.text, "INT");
-        codeList.add($code);
         // auto-increment
-        currTable.addTwoAddressCode("STOREI", $INTLITERAL.text, "INT");
+        $code = currTable.addTwoAddressCode("STOREI", $INTLITERAL.text, "INT");
+        codeList.add($code);
     }
     | FLOATLITERAL {
         $code = new TwoAddressCode("STOREF", $FLOATLITERAL.text, "FLOAT");
@@ -299,8 +299,6 @@ mulop             : '*' | '/';
 /* Complex Statements and Condition */
 if_stmt
     : {
-        symbolStack.push(currTable);
-        currTable = new Block(currTable);
         graphStack.push(currGraph);
         currGraph = new IfGraph();
     } IF LPAREN cond RPAREN decl stmt_list {
@@ -315,30 +313,14 @@ if_stmt
         OneAddressCode endCode = new OneAddressCode("LABEL", currGraph.getOutLabel(), "labelType");
         codeList.add(endCode);
         currTable.addCode(endCode);
-
-        // important: add currTable (block-level) codeList to parent's codeList, so that eventually
-        // function-level codeList will contain complete code in the right order,
-        // so when print codeList, do not print block-level codeList, just function-level
-        currTable.getParent().getCodeList().addAll(currTable.getCodeList());
-
-        currTable.getParent().addChild(currTable);
-        currTable = symbolStack.pop();
         currGraph = graphStack.pop();
     };
 else_part
-    : {
-        symbolStack.push(currTable);
-        currTable = new Block(currTable);
-    } ELSE decl stmt_list {
+    : ELSE decl stmt_list {
         // end of else_part, jump to out label
         OneAddressCode elseCode = new OneAddressCode("JUMP", currGraph.getOutLabel(), "labelType");
         codeList.add(elseCode);
         currTable.addCode(elseCode);
-
-        // important: add currTable (block-level) codeList to parent's codeList
-        currTable.getParent().getCodeList().addAll(currTable.getCodeList());
-        currTable.getParent().addChild(currTable);
-        currTable = symbolStack.pop();
     }| /* empty */;
 cond              : prevExpr=expr compop postExpr=expr {
     String op1 = $prevExpr.code.getResult();
