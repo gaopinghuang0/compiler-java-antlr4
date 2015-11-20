@@ -46,30 +46,13 @@ public class TinyCode {
 
     public void toTinyCode() {
         for (Code c : codeList) {
-            if (c.getClass() == PrefixCode.class){
-                handlePrefixCode(c);
-            }
-            else if (c.getClass() == OneAddressCode.class) {
+            if (c.getClass() == OneAddressCode.class) {
                 handleOneAddress(c);  // write and read
             } else if (c.getClass() == TwoAddressCode.class) {
                 handleTwoAddress(c);  // store
             } else {
                 handleThreeAddress(c);
             }
-        }
-
-    }
-    // Delete this after merge with gaoping's modification.
-    public void handlePrefixCode(Code c) {
-        String op = c.getOpcode();
-        String op1 = c.getOp1();
-        switch (op) {
-            case "LABEL":
-                System.out.println(op.toLowerCase() + " " + op1);
-                break;
-            case "LINK":
-                System.out.println(op.toLowerCase() + " " + (declId-1));
-                break;
         }
     }
 
@@ -82,21 +65,21 @@ public class TinyCode {
                 System.out.println(getTinyOpcode(op) + " " + result);
                 break;
             case "JUMP":
-                System.out.println( getTinyOpcode(op).replace("u", "") + " " +result);
+                System.out.println(getTinyOpcode(op).replace("u", "") + " " + result);
                 break;
             case "PUSH":
-                System.out.println( op.toLowerCase() + " " + getTinyTransform(result) );
+                System.out.println(op.toLowerCase() + " " + getTinyTransform(result));
                 break;
             case "POP":
-                System.out.println( op.toLowerCase() + " " + getTinyTransform(result) );
+                System.out.println(op.toLowerCase() + " " + getTinyTransform(result));
                 break;
             case "JSR":
-                for(int i=0; i<4; i++){
-                    System.out.println( "push " + "r"+i);
+                for(int i=0; i<4; i++) {
+                    System.out.println("push " + "r" + i);
                 }
-                System.out.println( op.toLowerCase() + " " + result);
-                for(int i=3; i>-1; i--){
-                    System.out.println( "pop " + "r"+i);
+                System.out.println(op.toLowerCase() + " " + result);
+                for(int i=3; i>-1; i--) {
+                    System.out.println("pop " + "r" + i);
                 }
                 break;
             case "RET":
@@ -104,7 +87,7 @@ public class TinyCode {
                 System.out.println(getTinyOpcode(c.getOpcode()));
                 break;
             case "LINK":
-                System.out.println(op.toLowerCase());
+                System.out.println(op.toLowerCase() + " " + (declId - 1));
                 break;
             default:
                 System.out.println("sys "+ getTinyOpcode(c.getOpcode()) + " " + getTinyTransform(result));
