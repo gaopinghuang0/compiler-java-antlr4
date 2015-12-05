@@ -22,6 +22,9 @@ public class Micro {
 
             System.out.println(";IR code");
             printIRcode(data.getTable());
+
+            updateLivenessAnalysis(data.getTable());
+
             System.out.println(";tiny code");
             printSymbolTable(data.getTable());
 
@@ -31,12 +34,7 @@ public class Micro {
         }
     }
 
-    private static void printIR(ArrayList<Code> codeList) {
-        System.out.println(";IR code");
-        for (Code c : codeList) {
-            System.out.println(";"+c.toIR());
-        }
-    }
+
     private static void printIRcode(SymbolTable table) {
         table.printIR();
 
@@ -44,6 +42,15 @@ public class Micro {
             printIRcode(st);
         }
     }
+
+    private static void updateLivenessAnalysis(SymbolTable table) {
+        table.updateLiveness();
+
+        for (SymbolTable st : table.getChildren()) {
+            updateLivenessAnalysis(st);
+        }
+    }
+
 
     private static void printSymbolTable(SymbolTable table) {
         table.printTable();
@@ -56,20 +63,21 @@ public class Micro {
         }
     }
 
-    private  static void printTinyCode(SymbolTable table){
-
-        table.printTiny(table.getParamId(),table.getDeclId());
-        for (SymbolTable st : table.getChildren()) {
-            printTinyCode(st);
-        }
-    }
-
-    private static void printPreTiny(){
+    // add before main function
+    private static void printPreTiny() {
         System.out.println("push");
-        for( int i =0; i <4; i++){
-            System.out.println("push "+"r"+i);
+        for (int i = 0; i < 4; i++) {
+            System.out.println("push " + "r" + i);
         }
         System.out.println("jsr main");
         System.out.println("sys halt");
+    }
+
+    private static void printTinyCode(SymbolTable table) {
+        table.printTiny(table.getParamId(), table.getDeclId());
+
+        for (SymbolTable st : table.getChildren()) {
+            printTinyCode(st);
+        }
     }
 }

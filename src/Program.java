@@ -4,7 +4,7 @@ import java.util.*;
  * Created by hgp on 10/2/2015.
  */
 public class Program implements SymbolTable {
-    private String scope="GLOBAL";
+    private String scope = "GLOBAL";
     private SymbolTable parent = null;
     private ArrayList<SymbolEntry> decls = new ArrayList<>();
     private ArrayList<SymbolTable> children = new ArrayList<>();
@@ -35,6 +35,10 @@ public class Program implements SymbolTable {
     @Override
     public List<Code> getCodeList() {
         return codeList;
+    }
+
+    public void setCodeList(List<Code> codeList) {
+        this.codeList = codeList;
     }
 
     public List<SymbolEntry> getCallExprList() {
@@ -123,25 +127,24 @@ public class Program implements SymbolTable {
         this.printCodeList();
     }
     public void printTable() {
-
         this.printDecl();
     }
-    public void printTiny(int paramId, int localTemp){
-            if(this.getCodeList().size()>0) {
-                TinyCode tc = new TinyCode(this.getCodeList(), paramId,localTemp);
-                tc.toTinyCode();
-            }
+
+    public void printTiny(int paramId, int localTemp) {
+        if (this.getCodeList().size() > 0) {
+            TinyCode tc = new TinyCode(this.getCodeList(), paramId, localTemp);
+            tc.toTinyCode();
+        }
     }
 
-
     public void printCodeList(){
-//        System.out.println(this.codeList)
+        // System.out.println(this.codeList)
         for (Code c : this.getCodeList()) {
                 System.out.println(";"+c.toIR());
         }
     }
     public void printDecl() {
-        //        System.out.println("Symbol table "+scope);
+        // System.out.println("Symbol table "+scope);
         for (SymbolEntry se : this.getDecls()) {
             if (se.getType().equals("STRING")) {
                 System.out.println("str " + se.getName() + " " + se.getVariable() +" " + se.getValue());
@@ -214,4 +217,23 @@ public class Program implements SymbolTable {
     }
 
 
+    @Override
+    public void updateLiveness() {
+        this.transferToLinkedList();
+        this.buildCFG();
+        this.updateInOut();
+    }
+
+    public void transferToLinkedList() {
+        List<Code> newList = new LinkedList<>(this.getCodeList());
+        this.setCodeList(newList);
+    }
+
+    public void buildCFG() {
+
+    }
+
+    public void updateInOut() {
+
+    }
 }

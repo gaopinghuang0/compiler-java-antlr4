@@ -4,7 +4,7 @@ import java.util.*;
  * Created by hgp on 10/2/2015.
  */
 public class Function extends Program implements SymbolTable {
-    private String scope="";
+    private String scope = "";
     private SymbolTable parent = null;
     private ArrayList<SymbolEntry> decls = new ArrayList<>();
     private ArrayList<SymbolTable> children = new ArrayList<>();
