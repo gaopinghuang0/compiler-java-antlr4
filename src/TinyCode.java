@@ -47,7 +47,7 @@ public class TinyCode {
     public void toTinyCode() {
         for (Code c : codeList) {
             if (c.getClass() == OneAddressCode.class) {
-                handleOneAddress(c);  // write and read
+                handleOneAddress(c);  // write and read...
             } else if (c.getClass() == TwoAddressCode.class) {
                 handleTwoAddress(c);  // store
             } else {
@@ -57,7 +57,7 @@ public class TinyCode {
     }
 
     public void handleOneAddress(Code c) {
-        //LABEL JUMP READ WRITE
+        //LABEL JUMP READ WRITE ...
         String op = c.getOpcode();
         String result = c.getResult();
         switch (op) {
@@ -68,8 +68,6 @@ public class TinyCode {
                 System.out.println(getTinyOpcode(op).replace("u", "") + " " + result);
                 break;
             case "PUSH":
-                System.out.println(op.toLowerCase() + " " + getTinyTransform(result));
-                break;
             case "POP":
                 System.out.println(op.toLowerCase() + " " + getTinyTransform(result));
                 break;
@@ -173,31 +171,25 @@ public class TinyCode {
     }
 
     public String getTinyTransform(String s){
-        if(s.startsWith("$L")){
-            String result = "$-" + s.replace("$L","");
-            return result;
-        }else if(s.startsWith("$T")){
-                //some lookupmethods for register...
-            String result = lookUpMap(s);
-            if(result == null){
+        String result = s;
+        if (s.startsWith("$L")) {
+            result = "$-" + s.replace("$L", "");
+        } else if (s.startsWith("$T")) {
+            // some lookup methods for register...
+            result = lookUpMap(s);
+            if (result == null) {
                 result = getNextReg();
-                map.put(s,result);
+                map.put(s, result);
             }
-            return result;
-        }else if(s.startsWith("$P")){
-            int temp = Integer.parseInt(s.replace("$P",""));
-            String result;
+        } else if (s.startsWith("$P")) {
+            int temp = Integer.parseInt(s.replace("$P", ""));
             temp = paramId + 5 - temp;
-            result = "$"+temp;
-            return result;
-        }else if (s.startsWith("$R")){
-            String result;
-            result = "$" + (5+paramId);
-            return result;
+            result = "$" + temp;
+        } else if (s.startsWith("$R")) {
+            result = "$" + (5 + paramId);
         }
-        else {
-            return s;
-        }
+
+        return result;
     }
 
     public String getTinyOpcode(String opcode) {
