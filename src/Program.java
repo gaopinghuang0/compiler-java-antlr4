@@ -18,6 +18,8 @@ public class Program implements SymbolTable {
         return scope;
     }
 
+    public void setScope(String scope){ this.scope = scope; };
+
     public ArrayList<SymbolEntry> getDecls() {
         return decls;
     }
@@ -45,17 +47,22 @@ public class Program implements SymbolTable {
         return callExprList;
     }
 
+    @Override
+    public SymbolTable getParent() {
+        return this.parent;
+    }
+
     public void addCallExprEntry(SymbolEntry entry) {
-        this.getCallExprList().add(entry);
+        this.callExprList.add(entry);
     }
 
     public void addCode(Code c){
-        this.getCodeList().add(c);
+        this.codeList.add(c);
     }
 
     public Code addOneAddressCode(String opcode, String result, String type){
         Code localCode = new OneAddressCode(opcode, result, type);
-        this.getCodeList().add(localCode);
+        this.codeList.add(localCode);
         return localCode;
     }
 
@@ -64,33 +71,31 @@ public class Program implements SymbolTable {
             result = this.getNextLocalTemp();
         }
         Code localCode = new OneAddressCode(opcode, result, type);
-        this.getCodeList().add(localCode);
+        this.codeList.add(localCode);
         return localCode;
     }
 
     public Code addTwoAddressCode(String opcode, String op1, String type){
         String local = this.getNextLocalTemp();
         Code localCode = new TwoAddressCode(opcode, op1, local, type);
-        this.getCodeList().add(localCode);
+        this.codeList.add(localCode);
         return localCode;
     }
 
     public Code addResultAddressCode(String opcode, String op1,String type){
         Code reusltCode = new TwoAddressCode(opcode,op1,"$R",type);
         Code endCode = new OneAddressCode("RET","","");
-        this.getCodeList().add(reusltCode);
-        this.getCodeList().add(endCode);
+        this.codeList.add(reusltCode);
+        this.codeList.add(endCode);
         return reusltCode;
     }
 
     public Code addThreeAddressCode(String opcode, String op1, String op2, String type) {
         String local = this.getNextLocalTemp();
         Code localCode = new ThreeAddressCode(opcode, op1, op2, local, type);
-        this.getCodeList().add(localCode);
+        this.codeList.add(localCode);
         return localCode;
     }
-
-    public void setScope(String Scope){ this.scope = scope; };
 
     public void addElement(SymbolEntry e) {
         if (isContained(this.getDecls(), e)) {
@@ -119,10 +124,6 @@ public class Program implements SymbolTable {
         this.children.add(func);
     }
 
-    @Override
-    public SymbolTable getParent() {
-        return this.parent;
-    }
     public void printIR(){
         this.printCodeList();
     }
@@ -216,7 +217,6 @@ public class Program implements SymbolTable {
         this.addElement(se);
     }
 
-
     @Override
     public void updateLiveness() {
         this.transferToLinkedList();
@@ -225,7 +225,7 @@ public class Program implements SymbolTable {
     }
 
     public void transferToLinkedList() {
-        List<Code> newList = new LinkedList<>(this.getCodeList());
+        List<Code> newList = new LinkedList<>(this.codeList);
         this.setCodeList(newList);
     }
 

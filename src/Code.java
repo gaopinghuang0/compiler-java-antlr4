@@ -4,15 +4,15 @@ import java.util.*;
  * Created by hgp on 10/16/2015.
  */
 public abstract class Code {
-    public String opcode;
-    public String result;
-    public String type;
-    public Set<Code> predecessor = new HashSet<>();
-    public Set<Code> successor = new HashSet<>();
-    public Set<String> gen = new HashSet<>();
-    public Set<String> kill = new HashSet<>();
-    public Set<String> in = new HashSet<>();
-    public Set<String> out = new HashSet<>();
+    String opcode;
+    String result;
+    String type;
+    Set<Code> predecessor = new HashSet<>();
+    Set<Code> successor = new HashSet<>();
+    Set<String> gen = new HashSet<>();
+    Set<String> kill = new HashSet<>();
+    Set<String> in = new HashSet<>();
+    Set<String> out = new HashSet<>();
 
     abstract String toIR();
     abstract String getOp1();
