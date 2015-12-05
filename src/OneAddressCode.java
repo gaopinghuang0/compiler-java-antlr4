@@ -15,7 +15,7 @@ public class OneAddressCode implements Code {
     private Set<String> in = new HashSet<>();
     private Set<String> out = new HashSet<>();
 
-    // obsolete since no global-level $T variable, only function-level $T var
+    // keep, since primary id in Micro.g4 is using this
     public OneAddressCode(String result, String type) {
         this.result = result;
         this.opcode = null;

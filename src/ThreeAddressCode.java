@@ -3,7 +3,7 @@ import java.util.*;
 /**
  * Created by hgp on 10/16/2015.
  */
-public class ThreeAddressCode extends Node implements Code {
+public class ThreeAddressCode implements Code {
     private String opcode;
     private String op1;
     private String op2;
@@ -16,15 +16,6 @@ public class ThreeAddressCode extends Node implements Code {
     private Set<String> kill = new HashSet<>();
     private Set<String> in = new HashSet<>();
     private Set<String> out = new HashSet<>();
-
-    // obsolete since no global-level $T variable, only function-level $T var
-    public ThreeAddressCode(String opcode, String op1, String op2, String type) {
-        this.opcode = opcode;
-        this.op1 = op1;
-        this.op2 = op2;
-        this.result = "$T" + nextId();
-        this.type = type;
-    }
 
     public ThreeAddressCode(String opcode, String op1, String op2, String result, String type) {
         this.opcode = opcode;
