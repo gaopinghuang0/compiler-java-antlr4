@@ -157,7 +157,7 @@ public class Program implements SymbolTable {
 
     public void printCodeList() {
         for (Code c : codeList) {
-            System.out.println(";"+c.toIR());
+            System.out.println(";-------------"+c.toIR());
             System.out.println(";gen: "+c.getGen());
             System.out.println(";kill: "+c.getKill());
             System.out.println(";predecessor: "+c.getPredecessor());
@@ -245,12 +245,12 @@ public class Program implements SymbolTable {
             if (c.getClass() == OneAddressCode.class) {
                 initOneAddressCode(c, opcode, result, globalTemp);
             } else if (c.getClass() == TwoAddressCode.class) {
-                // twoAddressCode, add each non-literal op1 into kill
+                // twoAddressCode, add each result into kill and non-literal op1 into gen
                 String op1 = c.getOp1();
                 if (op1.startsWith("$")) {
-                    c.addKill(op1);
+                    c.addGen(op1);
                 }
-                c.addGen(result);
+                c.addKill(result);
             } else {  // threeAddressCode
                 c.addGen(c.getOp1());
                 c.addGen(c.getOp2());
@@ -337,6 +337,43 @@ public class Program implements SymbolTable {
     }
 
     public void updateInOut() {
-
+        for (Code c : codeList) {
+            _updateInOut(c);
+        }
     }
+
+    public void _updateInOut(Code c) {
+        if (!c.getOpcode().equals("RET")) {
+            // OUT of return node is already init to all global var
+            // but calcOut will always return empty set for return node
+            c.setOut(calcOut(c));
+        }
+        Set<String> newIn = calcIn(c);
+//        System.out.println("Node: " + c.toIR());
+//        System.out.println("newIn: " + newIn + " oldIn: " + c.getIn());
+        if (!newIn.equals(c.getIn())) {  // update all predecessor if different
+            c.setIn(newIn);
+            for (Code pred : c.getPredecessor()) {
+                _updateInOut(pred);
+            }
+        }
+    }
+
+    public Set<String> calcOut(Code c) {
+        // merge all IN of successor
+        Set<String> result = new HashSet<>();
+        for (Code succ : c.getSuccessor()) {
+            result.addAll(succ.getIn());
+        }
+        return result;
+    }
+
+    public Set<String> calcIn(Code c) {
+        Set<String> result = new HashSet<>(c.getOut());
+        // remove kill set from OUT
+        result.removeAll(c.getKill());
+        result.addAll(c.getGen());
+        return result;
+    }
+
 }

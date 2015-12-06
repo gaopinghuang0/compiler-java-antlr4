@@ -84,6 +84,14 @@ public abstract class Code {
         this.successor.add(code);
     }
 
+    public void setIn(Set<String> in) {
+        this.in = in;
+    }
+
+    public void setOut(Set<String> out) {
+        this.out = out;
+    }
+
     public String toString() {
         return toIR();
     }
