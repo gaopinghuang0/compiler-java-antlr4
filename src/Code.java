@@ -76,4 +76,15 @@ public abstract class Code {
         }
     }
 
+    public void addPredecessor(Code code) {
+        this.predecessor.add(code);
+    }
+
+    public void addSuccessor(Code code) {
+        this.successor.add(code);
+    }
+
+    public String toString() {
+        return toIR();
+    }
 }

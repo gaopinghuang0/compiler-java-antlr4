@@ -127,7 +127,7 @@ public class Program implements SymbolTable {
         this.children.add(func);
     }
 
-    public void printIR(){
+    public void printIR() {
         for (Code c : this.codeList) {
             System.out.println(";"+c.toIR());
         }
@@ -149,14 +149,14 @@ public class Program implements SymbolTable {
     }
 
     public void printTiny(int paramId, int localTemp) {
-        if (this.codeList.size() > 0) {
-            TinyCode tc = new TinyCode(this.codeList, paramId, localTemp);
+        if (codeList.size() > 0) {
+            TinyCode tc = new TinyCode(codeList, paramId, localTemp);
             tc.toTinyCode();
         }
     }
 
     public void printCodeList() {
-        for (Code c : this.codeList) {
+        for (Code c : codeList) {
             System.out.println(";"+c.toIR());
             System.out.println(";gen: "+c.getGen());
             System.out.println(";kill: "+c.getKill());
@@ -203,7 +203,7 @@ public class Program implements SymbolTable {
     }
 
     public String getNextParamId() {
-        return "$P"+paramId++;
+        return "$P" + paramId++;
     }
 
     public String getNextDeclId() {
@@ -217,25 +217,25 @@ public class Program implements SymbolTable {
 
     @Override
     public void addParamEntry(String name, String type) {
-        String variable = this.getNextParamId();
+        String variable = getNextParamId();
         SymbolEntry se = new SymbolEntry(name, type, "", variable);
-        this.addElement(se);
+        addElement(se);
     }
 
     @Override
     public void addDeclEntry(String name, String type) {
-        String variable = this.getNextDeclId();
+        String variable = getNextDeclId();
         SymbolEntry se = new SymbolEntry(name, type, "", variable);
-        this.addElement(se);
+        addElement(se);
     }
 
     @Override
     public void doLivenessAnalysis(List<String> globalTemp) {
-        this.initGenKillInOut(globalTemp);
-        this.transferToLinkedList();
-        this.buildCFG();
-        this.updateInOut();
-        this.printCodeList();
+        initGenKillInOut(globalTemp);
+        transferToLinkedList();
+        buildCFG();
+        updateInOut();
+        printCodeList();
     }
 
     public void initGenKillInOut(List<String> globalTemp) {
@@ -287,8 +287,53 @@ public class Program implements SymbolTable {
     }
 
     public void buildCFG() {
-        // iterate codeList, update predecessor and successor
+        if (codeList.size() == 0) {
+            return;
+        }
 
+        // iterate codeList, update predecessor and successor
+        int i = 0;
+        for (; i < codeList.size() - 1; i++) {
+            Code curr = codeList.get(i);
+            Code next = codeList.get(i + 1);
+
+            // no successor for return node, not be a predecessor for next node either
+            if (curr.getOpcode().equals("RET")) {
+                continue;
+            }
+
+            // normal stmt or conditionally jump fall-through target
+            if (!curr.getOpcode().equals("JUMP")) {
+                curr.addSuccessor(next);
+                next.addPredecessor(curr);
+            }
+
+            // explicit target of conditionally jump or unconditionally jump
+            if (Arrays.asList(Compop.IRop).contains(curr.getOpcode()) ||
+                    curr.getOpcode().equals("JUMP")) {
+                String label = curr.getResult();
+                Code target = lookUpTargetByLabel(label);
+                target.addPredecessor(curr);
+                curr.addSuccessor(target);
+            }
+        }
+
+        // last node (return node), no successor
+        if (!codeList.get(i).getOpcode().equals("RET")) {
+            System.err.println("last node of " + scope + " is not return");
+        }
+    }
+
+    public Code lookUpTargetByLabel(String label) {
+        if (!label.startsWith("label")) {
+            System.err.println("look up should be label, but is: " + label);
+        }
+        for (Code c : codeList) {
+            if (c.getOpcode().equals("LABEL") && c.getResult().equals(label)) {
+                return c;
+            }
+        }
+        return null;
     }
 
     public void updateInOut() {
