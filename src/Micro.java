@@ -19,21 +19,39 @@ public class Micro {
             CommonTokenStream tokens = new CommonTokenStream(lexer);
             MicroParser parser = new MicroParser(tokens);
             ReturnData data = parser.program().data;
+            SymbolTable table = data.getTable();
 
             System.out.println(";IR code");
-            printIRcode(data.getTable());
+            printIRcode(table);
 
-            updateLivenessAnalysis(data.getTable());
+            List<String> globalTemp = getGlobalTemp(table);
+            updateLiveness(table, globalTemp);
 
             System.out.println(";tiny code");
-            printSymbolTable(data.getTable());
+            printSymbolTable(table);
 
             printPreTiny();
-            printTinyCode(data.getTable());
+            printTinyCode(table);
             System.out.println("end");
         }
     }
 
+    private static List<String> getGlobalTemp(SymbolTable table) {
+        List<String> globalTemp = new ArrayList<>();
+        if (table.getScope().equals("GLOBAL")) {
+            System.out.println();
+            System.out.println(";Yes, global");
+            for (SymbolEntry se: table.getDecls()) {
+                // both parameter variable and local variable are in decl list
+                // but parameter variable starts with "$P" while the other "$L"
+                String variable = se.getVariable();
+                if (variable.startsWith("$L")) {
+                    globalTemp.add(variable);
+                }
+            }
+        }
+        return globalTemp;
+    }
 
     private static void printIRcode(SymbolTable table) {
         table.printIR();
@@ -43,11 +61,11 @@ public class Micro {
         }
     }
 
-    private static void updateLivenessAnalysis(SymbolTable table) {
-        table.updateLiveness();
+    private static void updateLiveness(SymbolTable table, List<String> globalTemp) {
+        table.doLivenessAnalysis(globalTemp);
 
         for (SymbolTable st : table.getChildren()) {
-            updateLivenessAnalysis(st);
+            updateLiveness(st, globalTemp);
         }
     }
 

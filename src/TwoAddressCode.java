@@ -12,9 +12,6 @@ public class TwoAddressCode extends Code {
         this.op1 = op1;
         this.result = result;
         this.type = type;
-
-        this.gen.add(op1);
-        this.kill.add(result);
     }
 
     public String getOp1() {

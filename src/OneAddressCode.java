@@ -6,8 +6,8 @@ import java.util.*;
 public class OneAddressCode extends Code {
     // keep, since primary id in Micro.g4 is using this
     public OneAddressCode(String result, String type) {
-        this.result = result;
         this.opcode = null;
+        this.result = result;
         this.type = type;
     }
 
@@ -15,11 +15,8 @@ public class OneAddressCode extends Code {
         this.opcode = opcode;
         this.result = result;
         this.type = type;
-
-        //TODO: handle some special tricky cases
-//        this.gen.add(op1);
-        this.kill.add(result);
     }
+
     public String getOp1() {
         return null;
     }
@@ -29,4 +26,5 @@ public class OneAddressCode extends Code {
     public String toIR() {
         return opcode + " " + result;
     }
+
 }

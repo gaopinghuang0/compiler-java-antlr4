@@ -19,6 +19,10 @@ public class SymbolEntry {
         return value;
     }
 
+    public String getVariable() {
+        return variable;
+    }
+
     public SymbolEntry(String name, String type) {
         this.name = name;
         this.type = type;
@@ -42,9 +46,5 @@ public class SymbolEntry {
             out += " value " + value;
         }
         return out;
-    }
-
-    public String getVariable() {
-        return variable;
     }
 }

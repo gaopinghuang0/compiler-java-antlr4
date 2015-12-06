@@ -51,4 +51,29 @@ public abstract class Code {
     public Set<String> getOut() {
         return out;
     }
+
+    public void addGen(String var) {
+        if (var != null && !var.isEmpty()) {
+            this.gen.add(var);
+        }
+    }
+
+    public void addKill(String var) {
+        if (var != null && !var.isEmpty()) {
+            this.kill.add(var);
+        }
+    }
+
+    public void addIn(String var) {
+        if (var != null && !var.isEmpty()) {
+            this.in.add(var);
+        }
+    }
+
+    public void addOut(String var) {
+        if (var != null && !var.isEmpty()) {
+            this.out.add(var);
+        }
+    }
+
 }

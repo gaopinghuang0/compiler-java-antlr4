@@ -87,7 +87,7 @@ public class TinyCode {
             case "LINK":
                 System.out.println(op.toLowerCase() + " " + (declId - 1));
                 break;
-            default:
+            default:  // READ or WRITE
                 System.out.println("sys "+ getTinyOpcode(c.getOpcode()) + " " + getTinyTransform(result));
                 break;
         }

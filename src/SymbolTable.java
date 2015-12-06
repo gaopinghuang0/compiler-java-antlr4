@@ -17,7 +17,7 @@ public interface SymbolTable {
     void addChild(SymbolTable func);
     void printTable();
     void printIR();
-    void updateLiveness();
+    void doLivenessAnalysis(List<String> globalTemp);
     void printTiny(int paramId, int localTemp);
     SymbolTable getParent();
     String lookUpType(String name);

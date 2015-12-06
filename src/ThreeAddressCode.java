@@ -13,10 +13,6 @@ public class ThreeAddressCode extends Code {
         this.op2 = op2;
         this.result = result;
         this.type = type;
-
-        this.gen.add(op1);
-        this.gen.add(op2);
-        this.kill.add(result);
     }
 
     public String getOp1() {
