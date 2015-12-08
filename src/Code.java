@@ -17,7 +17,7 @@ public abstract class Code {
     abstract String toIR();
     abstract String getOp1();
     abstract String getOp2();
-
+    abstract ArrayList<String> getOpArray();
     public String getOpcode() {
         return opcode;
     }

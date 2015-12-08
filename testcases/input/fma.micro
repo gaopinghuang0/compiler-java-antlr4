@@ -8,7 +8,7 @@ BEGIN
      STRING star := "*";
 	STRING plus := "+";
 	STRING equal := "=";
-	
+
 	FUNCTION FLOAT add (FLOAT a, FLOAT b)
 	BEGIN
 	  FLOAT result;
@@ -22,7 +22,7 @@ BEGIN
 		result := a*b;
 		RETURN result;
 	END
-	
+
 	FUNCTION INT main ()
 	BEGIN
 		FLOAT a,b,c;

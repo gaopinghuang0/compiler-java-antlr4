@@ -24,5 +24,9 @@ public class OneAddressCode extends Code {
     public String toIR() {
         return opcode + " " + result;
     }
-
+    public ArrayList<String> getOpArray(){
+        ArrayList<String> list = new ArrayList<String>();
+        list.add(this.result);
+        return list;
+    }
 }

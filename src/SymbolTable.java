@@ -13,12 +13,14 @@ public interface SymbolTable {
     void addCallExprEntry(SymbolEntry entry);
     int getParamId();
     int getDeclId();
+    int getLocalTemp();
     void addElement(SymbolEntry e);
     void addChild(SymbolTable func);
     void printTable();
     void printIR();
+    void printCodeOut();
     void doLivenessAnalysis(List<String> globalTemp);
-    void printTiny(int paramId, int localTemp);
+    void printTiny(int paramId, int localTemp, int declId);
     SymbolTable getParent();
     String lookUpType(String name);
     void addParamEntry(String name, String type);

@@ -25,16 +25,33 @@ public class Micro {
             printIRcode(table);
 
             List<String> globalTemp = getGlobalTemp(table);
+            // use for live analysis, without this function call, we can't get live analysis
             updateLiveness(table, globalTemp);
 
-            System.out.println(";tiny code");
-            printSymbolTable(table);
+           // System.out.println(";tiny code");
+           // printSymbolTable(table);
 
-            printPreTiny();
+           // printPreTiny();
             printTinyCode(table);
-            System.out.println("end");
+           // System.out.println("end");
         }
     }
+
+    // temporary function, use to look how codelist looks like
+    private static void printCode(SymbolTable table){
+        table.printCodeOut();
+        for(SymbolTable st: table.getChildren()){
+            printCode(st);
+        }
+    }
+
+//    private static  void regAllocate(SymbolTable table){
+//        table.buRegAllocate();
+//        for(SymbolTable st:table.getChildren()){
+//            regAllocate(st);
+//        }
+//
+//    }
 
     private static List<String> getGlobalTemp(SymbolTable table) {
         List<String> globalTemp = new ArrayList<>();
@@ -69,7 +86,6 @@ public class Micro {
         }
     }
 
-
     private static void printSymbolTable(SymbolTable table) {
         table.printTable();
 
@@ -92,10 +108,12 @@ public class Micro {
     }
 
     private static void printTinyCode(SymbolTable table) {
-        table.printTiny(table.getParamId(), table.getDeclId());
+        table.printTiny(table.getParamId(),table.getLocalTemp() ,table.getDeclId());
 
         for (SymbolTable st : table.getChildren()) {
             printTinyCode(st);
+            System.out.println(";Spilling registers at the end of the Basic Block");
         }
+        System.out.println("end");
     }
 }

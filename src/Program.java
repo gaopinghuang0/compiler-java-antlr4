@@ -13,7 +13,6 @@ public class Program implements SymbolTable {
     private int localTemp = 1;
     private List<Code> codeList = new ArrayList<>();
     private List<SymbolEntry> callExprList = new ArrayList<>();
-
     public String getScope() {
         return scope;
     }
@@ -27,7 +26,7 @@ public class Program implements SymbolTable {
     public int getParamId(){
         return this.paramId;
     }
-
+    public int getLocalTemp() {return this.localTemp;}
     @Override
     public int getDeclId(){
         return this.declId;
@@ -114,6 +113,7 @@ public class Program implements SymbolTable {
         this.decls.add(e);
     }
 
+
     public boolean isContained(ArrayList<SymbolEntry> decls, SymbolEntry entry) {
         for (SymbolEntry d : decls) {
             if (d.getName().equals(entry.getName()) && d.getType().equals(entry.getType())) {
@@ -132,7 +132,11 @@ public class Program implements SymbolTable {
             System.out.println(";"+c.toIR());
         }
     }
-
+    public void printCodeOut(){
+        for (Code c: this.codeList){
+            System.out.println(c.getOut());
+        }
+    }
     public void printTable() {
         this.printDecl();
     }
@@ -147,10 +151,10 @@ public class Program implements SymbolTable {
             }
         }
     }
-
-    public void printTiny(int paramId, int localTemp) {
+    public void printTiny(int paramId, int localTemp, int declId) {
         if (codeList.size() > 0) {
-            TinyCode tc = new TinyCode(codeList, paramId, localTemp);
+            //initRegMap();
+            TinyCode tc = new TinyCode(codeList, paramId, localTemp, declId);
             tc.toTinyCode();
         }
     }
@@ -164,6 +168,10 @@ public class Program implements SymbolTable {
             System.out.println(";successor: "+c.getSuccessor());
             System.out.println(";IN: "+c.getIn());
             System.out.println(";OUT: "+c.getOut());
+            for(String s : c.getOut()){
+                System.out.println(s);
+            }
+
         }
     }
 
@@ -375,5 +383,6 @@ public class Program implements SymbolTable {
         result.addAll(c.getGen());
         return result;
     }
+
 
 }
