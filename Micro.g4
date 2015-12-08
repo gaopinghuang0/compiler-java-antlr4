@@ -9,6 +9,8 @@ grammar Micro;
     CostomStack<SymbolTable> symbolStack = new CostomStack<>();
     CostomStack<Graph> graphStack = new CostomStack<>();
     Graph currGraph = null;
+    List<SymbolEntry> currCallExprList = null;
+    CostomStack<List> callExprStack = new CostomStack<>();
 }
 
 /* Program */
@@ -225,20 +227,21 @@ postfix_expr  returns [Code code]
         // mock a code for global codeList, no real use
         $code = new OneAddressCode("RETURN", "$"+"XX", "INT");
     };
-call_expr : id LPAREN expr_list RPAREN {
-        currTable.addOneAddressCode("PUSH","","");
-        List<SymbolEntry> callExprList = currTable.getCallExprList();
-
-        for (SymbolEntry se : callExprList) {
-            currTable.addOneAddressCode("PUSH", se.getName(), se.getType());
-        }
-        currTable.addOneAddressCode("JSR", $id.text, "LABEL");
-        for (SymbolEntry se : callExprList) {
-            currTable.addOneAddressCode("POP", "", se.getType());
-        }
-        // clear the callExprList after this function call
-        currTable.getCallExprList().clear();
-        currTable.addOneAddressCode("POP","","", true);
+call_expr : id LPAREN {
+    // use a stack to handle nested call expr list
+    callExprStack.push(currCallExprList);
+    currCallExprList = new ArrayList<>();
+} expr_list RPAREN {
+    currTable.addOneAddressCode("PUSH","","");
+    for (SymbolEntry se : currCallExprList) {
+        currTable.addOneAddressCode("PUSH", se.getName(), se.getType());
+    }
+    currTable.addOneAddressCode("JSR", $id.text, "LABEL");
+    for (SymbolEntry se : currCallExprList) {
+        currTable.addOneAddressCode("POP", "", se.getType());
+    }
+    currCallExprList = callExprStack.pop();
+    currTable.addOneAddressCode("POP","","", true);
 };
 expr_list : expr {
     // add callExpr entry based on whether primary id or expression
@@ -252,9 +255,10 @@ expr_list : expr {
         Code c = currTable.getCodeList().get(size-1);
         se = new SymbolEntry(c.getResult(), c.getType());
     }
-    currTable.addCallExprEntry(se);
+    currCallExprList.add(se);
 } expr_list_tail | /* empty */;
-expr_list_tail : COMMA expr {
+expr_list_tail : COMMA expr expr_list_tail
+{
     // add callExpr entry based on whether primary id or expression
     String name = currTable.lookUpVar($expr.text);
     SymbolEntry se;
@@ -266,8 +270,8 @@ expr_list_tail : COMMA expr {
         Code c = currTable.getCodeList().get(size-1);
         se = new SymbolEntry(c.getResult(), c.getType());
     }
-    currTable.addCallExprEntry(se);
-} expr_list_tail | /* empty */;
+    currCallExprList.add(se);
+} | /* empty */;
 
 primary  returns [Code code]
     : LPAREN expr RPAREN {
@@ -285,6 +289,7 @@ primary  returns [Code code]
     }
     | FLOATLITERAL {
         $code = currTable.addTwoAddressCode("STOREF", $FLOATLITERAL.text, "FLOAT");
+        System.out.println($FLOATLITERAL.text);
     };
 addop             : '+' | '-';
 mulop             : '*' | '/';
@@ -434,7 +439,7 @@ GE:'>=';
 
 IDENTIFIER: [a-zA-Z][a-zA-Z0-9]*;
 INTLITERAL: [0-9]+;
-FLOATLITERAL: [0-9]+.[0-9]+;
+FLOATLITERAL: [0-9]+'\\.'[0-9]+;
 STRINGLITERAL:'"'~["]*'"';
 COMMENT: '--'~[\r\n]* -> skip;
 

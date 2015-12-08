@@ -8,9 +8,7 @@ public interface SymbolTable {
     ArrayList<SymbolEntry> getDecls();
     ArrayList<SymbolTable> getChildren();
     List<Code> getCodeList();
-    List<SymbolEntry> getCallExprList();
     void setScope(String scope);
-    void addCallExprEntry(SymbolEntry entry);
     int getParamId();
     int getDeclId();
     int getLocalTemp();

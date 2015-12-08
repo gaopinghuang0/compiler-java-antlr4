@@ -45,17 +45,9 @@ public class Program implements SymbolTable {
         this.codeList = codeList;
     }
 
-    public List<SymbolEntry> getCallExprList() {
-        return callExprList;
-    }
-
     @Override
     public SymbolTable getParent() {
         return this.parent;
-    }
-
-    public void addCallExprEntry(SymbolEntry entry) {
-        this.callExprList.add(entry);
     }
 
     public void addCode(Code c){
@@ -243,7 +235,7 @@ public class Program implements SymbolTable {
         transferToLinkedList();
         buildCFG();
         updateInOut();
-        printCodeList();
+//        printCodeList();
     }
 
     public void initGenKillInOut(List<String> globalTemp) {
@@ -305,11 +297,11 @@ public class Program implements SymbolTable {
             Code curr = codeList.get(i);
             Code next = codeList.get(i + 1);
 
-            // no successor for return node, not be a predecessor for next node either
-            if (curr.getOpcode().equals("RET")) {
-                continue;
-            }
+//            if (curr.getOpcode().equals("RET")) {
+//                continue;
+//            }
 
+            // no successor for return node, not be a predecessor for next node either
             // normal stmt or conditionally jump fall-through target
             if (!curr.getOpcode().equals("JUMP")) {
                 curr.addSuccessor(next);
