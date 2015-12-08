@@ -28,12 +28,12 @@ public class Micro {
             // use for live analysis, without this function call, we can't get live analysis
             updateLiveness(table, globalTemp);
 
-           // System.out.println(";tiny code");
-           // printSymbolTable(table);
+            System.out.println(";tiny code");
+            printSymbolTable(table);
 
-           // printPreTiny();
+            printPreTiny();
             printTinyCode(table);
-           // System.out.println("end");
+            System.out.println("end");
         }
     }
 
@@ -45,19 +45,10 @@ public class Micro {
         }
     }
 
-//    private static  void regAllocate(SymbolTable table){
-//        table.buRegAllocate();
-//        for(SymbolTable st:table.getChildren()){
-//            regAllocate(st);
-//        }
-//
-//    }
-
     private static List<String> getGlobalTemp(SymbolTable table) {
         List<String> globalTemp = new ArrayList<>();
         if (table.getScope().equals("GLOBAL")) {
             System.out.println();
-            System.out.println(";Yes, global");
             for (SymbolEntry se: table.getDecls()) {
                 // both parameter variable and local variable are in decl list
                 // but parameter variable starts with "$P" while the other "$L"
@@ -114,6 +105,5 @@ public class Micro {
             printTinyCode(st);
             System.out.println(";Spilling registers at the end of the Basic Block");
         }
-        System.out.println("end");
     }
 }

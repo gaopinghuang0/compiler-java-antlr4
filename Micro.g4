@@ -183,7 +183,7 @@ expr_prefix  returns [Code code]
             //TODO: re-check this later: whether need to append to local codeList?
             currTable.addThreeAddressCode($ep.code.getOpcode(), $ep.code.getResult(),
                     $factor.code.getResult(), type);
-            $code = new OneAddressCode(op, $code.getResult(), type);
+            $code = new OneAddressCode(op, $ep.code.getResult(), type);
         } else {
             // TODO: re-check this later: whether need to append to local codeList?
             $code = new OneAddressCode(op, $factor.code.getResult(), type);
@@ -289,7 +289,6 @@ primary  returns [Code code]
     }
     | FLOATLITERAL {
         $code = currTable.addTwoAddressCode("STOREF", $FLOATLITERAL.text, "FLOAT");
-        System.out.println($FLOATLITERAL.text);
     };
 addop             : '+' | '-';
 mulop             : '*' | '/';
@@ -439,7 +438,7 @@ GE:'>=';
 
 IDENTIFIER: [a-zA-Z][a-zA-Z0-9]*;
 INTLITERAL: [0-9]+;
-FLOATLITERAL: [0-9]+'\\.'[0-9]+;
+FLOATLITERAL: [0-9]+'.'[0-9]+;
 STRINGLITERAL:'"'~["]*'"';
 COMMENT: '--'~[\r\n]* -> skip;
 

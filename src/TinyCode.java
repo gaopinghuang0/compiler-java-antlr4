@@ -1,7 +1,4 @@
-import com.sun.org.apache.xpath.internal.functions.FuncFalse;
-import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
 
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,6 +13,8 @@ public class TinyCode {
     private int paramId;
     private int localTemp;
     private int declId;
+
+
     public TinyCode(List<Code> codeList,int paramId,int localTemp, int declId) {
         this.codeList = codeList;
         this.paramId = paramId;
@@ -24,22 +23,6 @@ public class TinyCode {
         this.map = new HashMap<String, String>();
         this.dirtyList = new ArrayList<String>();
         initMap();
-    }
-    public void spillAllReg(){
-        for(String key : map.keySet()) {
-            String HashKey = key;
-            String HashValue = map.get(HashKey);
-            if (!HashValue.equals("null")){
-                System.out.println(";Spilling variable: " + HashValue);
-                System.out.println("move " + HashKey + " " +getTinyTransform(HashValue));
-                map.put(HashKey, "null");
-            }
-        }
-    }
-    public void initMap(){
-        for (int i=0; i<4; i++){
-            this.map.put("r"+i, "null");
-        }
     }
 
     public List<Code> getCodeList() {
@@ -54,20 +37,29 @@ public class TinyCode {
         return map;
     }
 
+    public void spillAllReg(){
+        for(String key : map.keySet()) {
+            String value = map.get(key);
+            if (!value.equals("null")){
+                System.out.println(";Spilling variable: " + value);
+                System.out.println("move " + key + " " +getTinyTransform(value));
+                map.put(key, "null");
+            }
+        }
+    }
+
+    public void initMap(){
+        for (int i=0; i<4; i++){
+            this.map.put("r"+i, "null");
+        }
+    }
+
     public String getNextReg() {
         if (currReg <= 3) {
             return "r" + (currReg++);
         } else {
             return GlobalTinyCode.getNextReg();
         }
-    }
-
-    public String lookUpMap(String op) {
-        String reg = map.get(op);
-        if (reg == null) {
-//            System.err.println("Not found in the map" );
-        }
-        return reg;
     }
 
     public void toTinyCode() {
@@ -81,39 +73,40 @@ public class TinyCode {
                 handleThreeAddress(c);
             }
         }
-
     }
-    public String regEnsure(Code c,String op, Set liveness){
+
+    public String regEnsure(Code c, String op, Set<String> liveness) {
         // check if opr already has regiser
-        if(!op.startsWith("$")) return op;
-        String reg= "";
-            for(String key: map.keySet()){
-                String value = map.get(key);
-                // reg found
-                if(value.equals(op)){
-                    reg = key;
-                    System.out.println(";ensure(): " + op + " has register " + reg+ " ");
+        if (!op.startsWith("$")) return op;
+        String reg = "";
+        for (String key : map.keySet()) {
+            String value = map.get(key);
+            // reg found
+            if (value.equals(op)) {
+                reg = key;
+                System.out.println(";ensure(): " + op + " has register " + reg + " ");
 
-                }
             }
-            // reg not found, allocate a reg for op
-            if (reg.isEmpty()){
-                reg = regAllocate(c, op, liveness);
-                //|| c.getOp1().equals(op)
-                // TODO: handle op1 in STORE case, "loading"
-                if(c.getClass() == ThreeAddressCode.class || c.getOpcode().contains("WRITE")){
+        }
+        // reg not found, allocate a reg for op
+        if (reg.isEmpty()) {
+            reg = regAllocate(c, op, liveness);
+            //|| c.getOp1().equals(op)
+            // TODO: handle op1 in STORE case, "loading"
+            if (c.getClass() == ThreeAddressCode.class || c.getOpcode().contains("WRITE")) {
 
-                    System.out.println(";loading " + op + " to register " +reg);
+                System.out.println(";loading " + op + " to register " + reg);
+                System.out.println("move " + getTinyTransform(op) + " " + reg);
+            } else if (c.getOpcode().contains("STORE")) {
+                if (c.getOp1().contains("$")) {
+                    System.out.println(";loading " + op + " to register " + reg);
                     System.out.println("move " + getTinyTransform(op) + " " + reg);
-                }else if (c.getOpcode().contains("STORE")){
-                    if(c.getOp1().contains("$")){
-                        System.out.println(";loading " + op + " to register " +reg);
-                        System.out.println("move " + getTinyTransform(op) + " " + reg);
-                    }
                 }
             }
-            return reg;
+        }
+        return reg;
     }
+
     public String regAllocate(Code c, String op, Set<String> liveness){
         String reg ="";
         // if there is a free reg, choose reg
@@ -131,76 +124,71 @@ public class TinyCode {
 
         // select reg that is not in liveness to spill
         for(String key : map.keySet()){
-            String HashKey = key;
-            String HashValue = map.get(HashKey);
+            String value = map.get(key);
             ArrayList<String> opList = c.getOpArray();
             //System.out.println(opList);
-            if((!liveness.contains(HashValue)) && (!opList.contains(HashValue))){
-                System.out.println("variable not live: " + HashValue);
-                System.out.println(";allocate() has to spill " + HashValue );
-                System.out.println(";Spilling variable: " + HashValue);
-                System.out.println("move " + HashKey + " " + getTinyTransform(HashValue));
-                System.out.println(";ensure(): " + op + " gets register "+reg+ " " + this.map);
-                this.map.put(HashKey, op);
-                dirtyList.remove(HashValue);
-                reg = HashKey;
+            if ((!liveness.contains(value)) && (!opList.contains(value))) {
+                System.out.println("variable not live: " + value);
+                System.out.println(";allocate() has to spill " + value);
+                System.out.println(";Spilling variable: " + value);
+                System.out.println("move " + key + " " + getTinyTransform(value));
+                System.out.println(";ensure(): " + op + " gets register " + reg + " " + this.map);
+                this.map.put(key, op);
+                dirtyList.remove(value);
+                reg = key;
                 break;
-            }else{
+            } else {
                 // randomly pick one variable to spill, but not op
-                if(!opList.contains(HashValue)){
-                    System.out.println(";allocate() has to spill " + HashValue);
-                    this.map.put(HashKey,"null");
-                    if(dirtyList.contains(HashValue)){
-                        System.out.println(";Spilling variable: " + HashValue);
-                        System.out.println("move " + HashKey + " " +getTinyTransform(HashValue));
-                        dirtyList.remove(HashValue);
+                if (!opList.contains(value)) {
+                    System.out.println(";allocate() has to spill " + value);
+                    this.map.put(key, "null");
+                    if (dirtyList.contains(value)) {
+                        System.out.println(";Spilling variable: " + value);
+                        System.out.println("move " + key + " " + getTinyTransform(value));
+                        dirtyList.remove(value);
 
                     }
-                    reg = regEnsure(c,op,liveness);
-                break;
+                    reg = regEnsure(c, op, liveness);
+                    break;
                 }
-
             }
         }
 
         return reg;
     }
+
     public void regFree(String op, Set<String> liveness){
-        //if r is marked dirty and live
-        //generate store
-        //mark r as free
+        // if r is marked dirty and live
+        // generate store
+        // mark r as free
         System.out.println(";Freeing unused variable " + op);
-        String HashKey = regLookup(op);
-        this.map.put(HashKey,"null");
-        if(this.dirtyList.contains(op)){
+        String key = regLookup(op);
+        this.map.put(key,"null");
+        if (this.dirtyList.contains(op)) {
             System.out.println(";Spilling variable: " + op);
-            System.out.println("move " + HashKey + " " + getTinyTransform(op));
+            System.out.println("move " + key + " " + getTinyTransform(op));
             this.dirtyList.remove(op);
         }
-
     }
+
     public String regLookup(String op){
         for( String key : this.map.keySet()){
-            String HashKey = key;
-            String HashValue = this.map.get(HashKey);
-            if (op.equals(HashValue)){return key;}
+            String value = this.map.get(key);
+            if (op.equals(value)){return key;}
         }
-        return "register not found";
+        return null;
     }
 
-
-    public void checkLive(String op, Set liveness){
+    public void checkLive(String op, Set<String> liveness){
         if (!liveness.contains(op)){
             regFree(op, liveness);
         }
-
     }
 
-    public void checkRegLive(Set liveness){
+    public void checkRegLive(Set<String> liveness){
         for(String key : map.keySet()) {
-            String HashKey = key;
-            String HashValue = map.get(HashKey);
-            if(!HashValue.equals("null")){ checkLive(HashValue,liveness);}
+            String value = map.get(key);
+            if(!value.equals("null")){ checkLive(value,liveness);}
         }
     }
 
@@ -210,8 +198,9 @@ public class TinyCode {
         System.out.println(";Switching owner of register " + reg + " to " + result);
         dirtyList.add(result);
     }
+
     public void handleOneAddress(Code c) {
-        //LABEL JUMP READ WRITE ...
+        // LABEL JUMP READ WRITE ...
         String op = c.getOpcode();
         String result = c.getResult();
         Set<String> liveness = c.getOut();
@@ -289,7 +278,7 @@ public class TinyCode {
             System.out.println("move " + reg1 + " " + getTinyTransform(result));
             checkLive(op1, liveness);
         } else {
-            System.out.println(c + " "+liveness);
+            System.out.println(";" + c + " "+liveness);
 
             reg1 = regEnsure(c, op1, liveness);
             reg2 = regEnsure(c, result, liveness);
@@ -298,15 +287,8 @@ public class TinyCode {
             System.out.println("move " + reg1 + " " + reg2);
             //System.out.println("move " + getTinyTransform(op1) + " " + getTinyTransform(result));
             checkRegLive(liveness);
-//            for(String key : map.keySet()) {
-//                String HashKey = key;
-//                String HashValue = map.get(HashKey);
-//                if(!HashValue.equals("null")){ checkLive(HashValue,liveness);}
-//            }
-
         }
     }
-
 
     public void handleThreeAddress(Code c) {
         String op1 = c.getOp1();
@@ -314,7 +296,7 @@ public class TinyCode {
         String op = c.getOpcode();
         String type = c.getType();
         String result = c.getResult();
-        Set liveness = c.getOut();
+        Set<String> liveness = c.getOut();
         String reg1 = "";
         String reg2 = "";
         String[] operationList = {"ADDI","ADDF","SUBI","SUBF","MULTI","MULTF","DIVI","DIVF"};
@@ -326,20 +308,6 @@ public class TinyCode {
             switchReg(op1, result);
             System.out.println(getTinyOpcode(op) + " " + reg2+" " + reg1);
             checkRegLive(liveness);
-//            for(String key : map.keySet()) {
-//                String HashKey = key;
-//                String HashValue = map.get(HashKey);
-//                if(!HashValue.equals("null")){ checkLive(HashValue,liveness);}
-//            }
-//            if (op1.startsWith("$T")) {
-//                reg = lookUpMap(op1);
-//            } else {
-//                reg = getNextReg();
-//                System.out.println("move " + op1 + " " + reg);
-//            }
-//            op2 = op2.startsWith("$T") ? lookUpMap(op2) : op2;
-//            System.out.println(getTinyOpcode(c.getOpcode()) + " " + op2 + " " + reg);
-//            map.put(c.getResult(), reg);
         } else {
             reg1 = regEnsure(c, op1, liveness);
             reg2 = regEnsure(c, op2, liveness);
@@ -349,45 +317,12 @@ public class TinyCode {
                 System.out.println("cmpr" + reg1 + " " +reg2);
             }
             checkRegLive(liveness);
-//            for(String key : map.keySet()) {
-//                String HashKey = key;
-//                String HashValue = map.get(HashKey);
-//                if(!HashValue.equals("null")){ checkLive(HashValue,liveness);}
-//            }
-            // initialze map
+
+            // initialize map
             System.out.println(";Spilling registers at the end of the Basic Block");
             spillAllReg();
             System.out.println("j" + op.toLowerCase() + " " +getTinyTransform(result));
-//            if (!(op2.startsWith("$T") || op2.startsWith("r"))){
-//                reg = getNextReg();
-//                System.out.println("move " + op2 + " " + reg);
-//                map.put(op2, reg);
-//            }
-//            op2 = op2.startsWith("r") ? op2 : lookUpMap(op2);
-//
-//            if(op2.startsWith("$L")) {
-//                reg = getNextReg();
-//                System.out.println("move " + getTinyTransform(op2) + " " + reg);
-//                if (type.equals("INT")){
-//                    System.out.println("cmpi " + getTinyTransform(op1) + " " + reg);
-//                }
-//                else if(type.equals("FLOAT")){
-//                    System.out.println("cmpr " + getTinyTransform(op1) + " " + reg);
-//                }
-//                System.out.println("j" + op.toLowerCase() + " " + getTinyTransform(c.getResult()));
-//            }else{
-//
-//                if (type.equals("INT")){
-//                    System.out.println("cmpi " + getTinyTransform(op1) + " " + getTinyTransform(op2));
-//                }
-//                else if(type.equals("FLOAT")){
-//                    System.out.println("cmpr " + getTinyTransform(op1) + " " + getTinyTransform(op2));
-//                }
-//                System.out.println("j" + op.toLowerCase() + " " + getTinyTransform(c.getResult()));
-//            }
         }
-
-
     }
 
     public String getTinyTransform(String s){
