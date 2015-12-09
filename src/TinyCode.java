@@ -41,15 +41,22 @@ public class TinyCode {
     public void spillAllReg(){
         for(String key : map.keySet()) {
             String value = map.get(key);
-            if (!value.equals("null")){
-                dbgPrint(";Spilling variable: " + value);
-                System.out.println("move " + key + " " +getTinyTransform(value));
+            if (!value.equals("null")) {
+                if (checkDirty(value)) {
+                    spillReg(key, value);
+                }
                 map.put(key, "null");
             }
         }
     }
 
-    public void initMap(){
+    public void spillReg(String key, String value) {
+        dbgPrint(";Spilling variable: " + value);
+        System.out.println("move " + key + " " +getTinyTransform(value));
+        dirtyList.remove(value);
+    }
+
+    public void initMap() {
         for (int i=0; i<4; i++){
             map.put("r"+i, "null");
         }
@@ -77,152 +84,6 @@ public class TinyCode {
         dbgPrint("; Final map" + map);
     }
 
-    public String regEnsure(Code c, String op, Set<String> liveness, boolean isFirst) {
-        // check if opr already has regiser
-        if (!op.startsWith("$")) return op;
-        String reg = "";
-        for (String key : map.keySet()) {
-            String value = map.get(key);
-            // reg found
-            if (value.equals(op)) {
-                reg = key;
-                dbgPrint(";ensure(): " + op + " has register " + reg + " " + map);
-                break;
-            }
-        }
-        // reg not found, allocate a reg for op
-        if (reg.isEmpty()) {
-            reg = regAllocate(c, op, liveness);
-            //|| c.getOp1().equals(op)
-            // TODO: handle op1 in STORE case, "loading"
-            if (c.getClass() == ThreeAddressCode.class || c.getOpcode().contains("WRITE")) {
-                dbgPrint(";loading " + op + " to register " + reg);
-                System.out.println("move " + getTinyTransform(op) + " " + reg);
-                map.put(reg, op);
-            } else if (c.getOpcode().contains("STORE") ) {
-                if (isFirst) {
-                    dbgPrint(";loading " + op + " to register " + reg);
-                    map.put(reg, op);
-                    System.out.println("move " + getTinyTransform(op) + " " + reg);
-                }
-            }
-        }
-        return reg;
-    }
-
-    public String regAllocate(Code c, String op, Set<String> liveness){
-        String reg ="";
-        // if there is a free reg, choose reg
-        for (int i =3; i >=0; i--){
-            String hashKey = "r"+i;
-            String hashValue = this.map.get(hashKey);
-            if (hashValue.equals("null")){
-                this.map.put(hashKey,op);
-                reg = hashKey;
-                dbgPrint(";ensure(): " + op + " gets register " + reg + " " + this.map);
-                return reg;
-            }
-
-        }
-
-        // select reg that is not in liveness to spill
-        boolean regPick = false;
-        ArrayList<String> opList = c.getOpArray();
-        for(String key : map.keySet()){
-            String value = map.get(key);
-            //System.out.println(opList);
-            if ((!liveness.contains(value)) && (!opList.contains(value))) {
-                dbgPrint(";allocate() has to spill " + value);
-                dbgPrint(";Spilling variable: " + value);
-                System.out.println("move " + key + " " + getTinyTransform(value));
-                this.map.put(key, op);
-                dbgPrint(";ensure(): " + op + " gets register " + reg + " " + this.map);
-                dirtyList.remove(value);
-                reg = key;
-                regPick = true;
-                break;
-            }
-        }
-        if(!regPick) {
-            // randomly pick one variable to spill, but not op
-            // search from livenss set, backward... and also in reg
-            int liveLen = liveness.size();
-            List<String> list = new ArrayList<String>(liveness);
-            for(int index=liveLen; index >0; index--) {
-                String value = list.get(index-1);
-                String checkReg = regLookup(value);
-                if (checkReg !=null) {
-                    if (!opList.contains(value)) {
-                        dbgPrint(";allocate() has to spill " + value);
-                        String key = regLookup(value);
-                        this.map.put(key, "null");
-                        if (dirtyList.contains(value)) {
-                            dbgPrint(";Spilling variable: " + value);
-                            System.out.println("move " + key + " " + getTinyTransform(value));
-                            dirtyList.remove(value);
-                            map.put(key, op);
-                            dbgPrint(";ensure(): " + op + " gets register " + key + " " + this.map);
-
-                        }
-                        //reg = regEnsure(c, op, liveness, isFirst);
-                        reg = key;
-                        break;
-                    }
-                }
-            }
-        }
-        return reg;
-    }
-
-    public void regFree(String op, Set<String> liveness){
-        // if r is marked dirty and live
-        // generate store
-        // mark r as free
-        dbgPrint(";Freeing unused variable " + op + " " + map);
-        String key = regLookup(op);
-        this.map.put(key,"null");
-        if (this.dirtyList.contains(op)) {
-            dbgPrint(";Spilling variable: " + op);
-            System.out.println("move " + key + " " + getTinyTransform(op));
-            this.dirtyList.remove(op);
-        }
-    }
-
-    public String regLookup(String op){
-        for( String key : this.map.keySet()){
-            String value = this.map.get(key);
-            if (op.equals(value)){return key;}
-        }
-        return null;
-    }
-
-    public void checkLive(String op, Set<String> liveness){
-        if (!liveness.contains(op)){
-            regFree(op, liveness);
-        }
-    }
-
-    public void checkRegLive(Set<String> liveness){
-        for(String key : map.keySet()) {
-            String value = map.get(key);
-            if(!value.equals("null")){ checkLive(value,liveness);}
-        }
-    }
-
-    public void switchReg(String op1, String result){
-        String reg = regLookup(op1);
-        this.map.put(reg, result);
-        dbgPrint(";Switching owner of register " + reg + " to " + result);
-        if (this.dirtyList.contains(op1)) {
-            dbgPrint(";Spilling variable: " + op1);
-            System.out.println("move " + reg + " " + getTinyTransform(op1));
-            this.dirtyList.remove(op1);
-        }
-        dirtyList.add(result);
-    }
-    public boolean checkDirty(String dirty){
-        return this.dirtyList.contains(dirty);
-    }
     public void handleOneAddress(Code c) {
         // LABEL JUMP READ WRITE ...
         String op = c.getOpcode();
@@ -234,11 +95,10 @@ public class TinyCode {
                 System.out.println(getTinyOpcode(op) + " " + result);
                 break;
             case "JUMP":
-                dbgPrint(";Spilling registers at the end of the Basic Block" + map);
-                spillAllReg();
                 System.out.println(getTinyOpcode(op).replace("u", "") + " " + result);
                 break;
             case "JSR":
+                spillAllReg();
                 for(int i=0; i<4; i++) {
                     System.out.println("push " + "r" + i);
                 }
@@ -248,44 +108,34 @@ public class TinyCode {
                 }
                 break;
             case "RET":
+                // at the end of each jsr function call, free all reg map
+                spillAllReg();
 
-                //checkRegLive(liveness);
                 System.out.println("unlnk");
                 System.out.println(getTinyOpcode(c.getOpcode()));
                 break;
             case "LINK":
                 //System.out.println(op.toLowerCase() + " " + (declId));
-                int resultValue = localTemp + declId -2;
+                int resultValue = localTemp + declId - 2;
                 System.out.println(op.toLowerCase() + " " + resultValue);
-
                 break;
             default:  // READ or WRITE
                 dbgPrint(";" + c + " " +liveness);
-                if(op.contains("READ") || op.contains("WRITEI") || op.contains("WRITEF") || op.contains("POP") || op.contains("PUSH")){
-                    boolean isFirst = false;
+                if (op.contains("READ") || op.contains("WRITEI") || op.contains("WRITEF") || op.contains("POP") || op.contains("PUSH")) {
 
-                    reg = regEnsure(c, result, liveness, isFirst);
-                    if(op.contains("READ")){
-                        if(!checkDirty(result)){ dirtyList.add(result);}
+                    reg = regEnsure(c, result, liveness);
+
+                    if (op.contains("READ") || op.contains("POP")) {
+                        addDirty(result);
                     }
 
-                    if(op.contains("POP") || op.contains("PUSH")){
+                    if (op.contains("POP") || op.contains("PUSH")) {
                         System.out.println(getTinyOpcode(op) + " " + reg);
-                        if(op.equals("POP")){ if(!checkDirty(result)){ dirtyList.add(result);}}
-                    }
-                    else {
+                    } else {
                         System.out.println(";sys " + map);
                         System.out.println("sys " + getTinyOpcode(op) + " " + reg);
                     }
-
-                    if(!liveness.contains(result)) {
-                        if(!result.equals("")){
-                            regFree(result, liveness);
-                        }
-                    }
-                }
-                else {
-
+                } else {  // hgp: what's the else situation?
                     System.out.println("sys " + getTinyOpcode(c.getOpcode()) + " " + getTinyTransform(result));
                 }
                 break;
@@ -298,24 +148,26 @@ public class TinyCode {
         String reg1 = "";
         String reg2 = "";
         Set<String> liveness = c.getOut();
-        boolean isFirst = true;
+
         // ensure(): $L1 has register r2
         // move r2 $8
-        //if(op1.startswith("$L")
+        // if(op1.startswith("$L")
         if (result.equals("$R")) {
-            reg1 = regEnsure(c,op1, liveness,isFirst);
+            reg1 = regEnsure(c, op1, liveness);
+            // $R does not need to allocate, since it has special location
             System.out.println("move " + reg1 + " " + getTinyTransform(result));
-            checkLive(op1, liveness);
-        } else {
+        } else {  // STORE
             dbgPrint(";" + c + " "+liveness);
-            isFirst = true;
-            reg1 = regEnsure(c, op1, liveness, isFirst);
-            isFirst = false;
-            reg2 = regEnsure(c, result, liveness, isFirst);
-            if(!checkDirty(result)){ dirtyList.add(result);}
-            System.out.println("move " + reg1 + " " + reg2);
-            //System.out.println("move " + getTinyTransform(op1) + " " + getTinyTransform(result));
+            reg1 = regEnsure(c, op1, liveness);
             checkRegLive(liveness);
+            reg2 = regAllocate(c, result, liveness);
+            if (reg2.equals(reg1)) {
+                dbgPrint(";Switching owner of register " + reg2 + " to " + result);
+            } else {
+                System.out.println("move " + reg1 + " " + reg2);
+            }
+            addDirty(result);
+            //System.out.println("move " + getTinyTransform(op1) + " " + getTinyTransform(result));
         }
     }
 
@@ -326,33 +178,133 @@ public class TinyCode {
         String type = c.getType();
         String result = c.getResult();
         Set<String> liveness = c.getOut();
-        boolean isFirst = false;
-        String reg1 = "";
-        String reg2 = "";
+        String reg1, reg2, reg3;
         String[] operationList = {"ADDI","ADDF","SUBI","SUBF","MULTI","MULTF","DIVI","DIVF"};
         if (Arrays.asList(operationList).contains(op)){
             dbgPrint(";"+c +" " + liveness);
-            reg1 = regEnsure(c,op1,liveness, isFirst);
-            reg2 = regEnsure(c,op2,liveness, isFirst);
-            switchReg(op1, result);
-            System.out.println(getTinyOpcode(op) + " " + reg2+" " + reg1);
+            reg1 = regEnsure(c, op1, liveness);
+            reg2 = regEnsure(c, op2, liveness);
             checkRegLive(liveness);
-        } else {
-            dbgPrint(";"+c +" " + liveness);
-            reg1 = regEnsure(c, op1, liveness, isFirst);
-            reg2 = regEnsure(c, op2, liveness, isFirst);
-            if(type.equals("INT")){
-                System.out.println("cmpi " + reg1 + " " + reg2 );
-            }else if (type.equals("FLOAT")){
-                System.out.println("cmpr" + reg1 + " " +reg2);
-            }
-            checkRegLive(liveness);
+            reg3 = regAllocate(c, result, liveness);
 
-            // initialize map
-            dbgPrint(";Spilling registers at the end of the Basic Block");
-            spillAllReg();
+            if (reg3.equals(reg1)) {
+                dbgPrint(";Switching owner of register " + reg3 + " to " + result);
+                System.out.println(getTinyOpcode(op) + " " + reg2 + " " + reg1);
+            } else {
+                System.out.println(getTinyOpcode(op) + " " + reg2 + " " + reg1);
+                System.out.println("move " + reg1 + " " + reg3 );
+            }
+
+            addDirty(result);
+        } else if (Arrays.asList(Compop.IRop).contains(op)) {  // compare op
+            dbgPrint(";" + c + " " + liveness);
+            reg1 = regEnsure(c, op1, liveness);
+            reg2 = regEnsure(c, op2, liveness);
+            checkRegLive(liveness);
+            if (type.equals("INT")) {
+                System.out.println("cmpi " + reg1 + " " + reg2);
+            } else if (type.equals("FLOAT")) {
+                System.out.println("cmpr" + reg1 + " " + reg2);
+            }
+
+            // no allocate or mark dirty for result label
             System.out.println("j" + op.toLowerCase() + " " + getTinyTransform(result));
         }
+    }
+
+    public String regEnsure(Code c, String op, Set<String> liveness) {
+        // check if opr already has regiser
+        if (!op.startsWith("$")) return op;
+
+        for (String key : map.keySet()) {
+            String value = map.get(key);
+            // reg is found
+            if (value.equals(op)) {
+                dbgPrint(";ensure(): " + op + " has register " + key + " " + map);
+                return key;
+            }
+        }
+
+        // reg not found, allocate a reg for op
+        // if op is not result, we need to load it to reg
+        String reg = regAllocate(c, op, liveness);;
+        dbgPrint(";loading " + op + " to register " + reg);
+        System.out.println("move " + getTinyTransform(op) + " " + reg);
+        map.put(reg, op);
+
+        return reg;
+    }
+
+    public String regAllocate(Code c, String op, Set<String> liveness){
+        // if there is a free reg, choose reg
+        for (String key: map.keySet()){
+            String hashValue = map.get(key);
+            if (hashValue.equals("null")){
+                map.put(key, op);
+                dbgPrint(";ensure(): " + op + " gets register " + key + " " + map);
+                return key;
+            }
+        }
+
+        // choose a reg to free
+        // select reg that is not in liveness to spill
+        String reg ="";
+        List<String> opList = c.getOpArray();
+        for (String key : map.keySet()) {
+            String value = map.get(key);
+            if (!opList.contains(value)) {
+                reg = key;
+                if (!liveness.contains(value)) {
+                    break;
+                }
+            }
+        }
+
+        // free and mark as associated
+        regFree(map.get(reg), liveness);
+        map.put(reg, op);
+        return reg;
+    }
+
+    public void regFree(String op, Set<String> liveness) {
+        // if r is marked dirty and live
+        // generate store
+        // mark r as free
+        if (!liveness.contains(op)) {
+            dbgPrint(";Freeing unused variable " + op + " " + map);
+        }
+        String key = regLookup(op);
+        map.put(key, "null");
+        if (dirtyList.contains(op)) {
+            spillReg(key, op);
+        }
+    }
+
+    public String regLookup(String op){
+        for( String key : this.map.keySet()){
+            String value = this.map.get(key);
+            if (op.equals(value)){return key;}
+        }
+        return null;
+    }
+
+    public void checkRegLive(Set<String> liveness){
+        for(String key : map.keySet()) {
+            String value = map.get(key);
+            if (!value.equals("null") && !liveness.contains(value)) {
+                regFree(value, liveness);
+            }
+        }
+    }
+
+    public void addDirty(String result) {
+        if (!checkDirty(result)) {
+            dirtyList.add(result);
+        }
+    }
+
+    public boolean checkDirty(String value){
+        return this.dirtyList.contains(value);
     }
 
     public String getTinyTransform(String s){

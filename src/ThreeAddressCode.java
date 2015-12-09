@@ -24,11 +24,12 @@ public class ThreeAddressCode extends Code {
     public String toIR() {
         return opcode + " " + op1 + " " + op2 + " " + result;
     }
-    public ArrayList<String> getOpArray(){
-        ArrayList<String> list = new ArrayList<String>();
+
+    public List<String> getOpArray(){
+        List<String> list = new ArrayList<>();
         list.add(this.op1);
         list.add(this.op2);
-        list.add(this.result);
+//        list.add(this.result);
         return list;
     }
 }

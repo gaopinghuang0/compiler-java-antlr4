@@ -139,7 +139,7 @@ public class Program implements SymbolTable {
             if (se.getType().equals("STRING")) {
                 System.out.println("str " + se.getName() + " " + se.getVariable() +" " + se.getValue());
             } else {
-                //System.out.println("var " + " " + se.getVariable() + " " + se.getName());
+//                System.out.println("var " + " " + se.getVariable() + " " + se.getName());
             }
         }
     }

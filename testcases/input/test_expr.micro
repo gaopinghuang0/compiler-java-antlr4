@@ -1,11 +1,12 @@
 PROGRAM expr
 BEGIN
 
-	INT a,b,c,d;
-	FLOAT x,y,z,t;
+
 
 	FUNCTION VOID main()
 	BEGIN
+		INT a,b,c,d;
+    	FLOAT x,y,z,t;
 		a := 1;
 		b := 2;
 		c := 10;
