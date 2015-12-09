@@ -181,9 +181,9 @@ expr_prefix  returns [Code code]
         }
         if ($ep.code != null) {  // complex expression
             //TODO: re-check this later: whether need to append to local codeList?
-            currTable.addThreeAddressCode($ep.code.getOpcode(), $ep.code.getResult(),
+            $code = currTable.addThreeAddressCode($ep.code.getOpcode(), $ep.code.getResult(),
                     $factor.code.getResult(), type);
-            $code = new OneAddressCode(op, $ep.code.getResult(), type);
+            $code = new OneAddressCode(op, $code.getResult(), type);
         } else {
             // TODO: re-check this later: whether need to append to local codeList?
             $code = new OneAddressCode(op, $factor.code.getResult(), type);
