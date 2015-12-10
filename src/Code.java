@@ -13,6 +13,8 @@ public abstract class Code {
     Set<String> kill = new HashSet<>();
     Set<String> in = new HashSet<>();
     Set<String> out = new HashSet<>();
+    boolean isLeader = false;
+    boolean isTail = false;
 
     abstract String toIR();
     abstract String getOp1();
@@ -26,6 +28,14 @@ public abstract class Code {
     }
     public String getType() {
         return type;
+    }
+
+    public boolean isLeader() {
+        return isLeader;
+    }
+
+    public boolean isTail() {
+        return isTail;
     }
 
     public Set<Code> getPredecessor() {
@@ -90,6 +100,14 @@ public abstract class Code {
 
     public void setOut(Set<String> out) {
         this.out = out;
+    }
+
+    public void markAsLeader() {
+        this.isLeader = true;
+    }
+
+    public void markAsTail() {
+        this.isTail = true;
     }
 
     public String toString() {

@@ -1,17 +1,18 @@
 PROGRAM test
 BEGIN
 
-	INT i,j;
-	FLOAT newapprox,approx,num;
+
 
 	FUNCTION VOID main()
 	BEGIN
+		INT i,j;
+       	FLOAT newapprox,approx,num;
 	
 		num := 7.0;	
 		i := 100;
 		j := 1;
-		approx := num;	
-	
+		approx := num;
+
         FOR (; j >= 0; )
 			newapprox := 0.5*(approx + num/approx);
 			approx := newapprox;

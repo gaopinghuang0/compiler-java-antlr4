@@ -234,6 +234,7 @@ public class Program implements SymbolTable {
         initGenKillInOut(globalTemp);
         transferToLinkedList();
         buildCFG();
+        buildBasicBlock();
         updateInOut();
 //        printCodeList();
     }
@@ -293,6 +294,7 @@ public class Program implements SymbolTable {
 
         // iterate codeList, update predecessor and successor
         int i = 0;
+        codeList.get(i).markAsLeader();
         for (; i < codeList.size() - 1; i++) {
             Code curr = codeList.get(i);
             Code next = codeList.get(i + 1);
@@ -315,6 +317,11 @@ public class Program implements SymbolTable {
                 Code target = lookUpTargetByLabel(label);
                 target.addPredecessor(curr);
                 curr.addSuccessor(target);
+
+                // mark implicit and explicit target as leader
+                for (Code succ : curr.getSuccessor()) {
+                    succ.markAsLeader();
+                }
             }
         }
 
@@ -322,6 +329,25 @@ public class Program implements SymbolTable {
         if (!codeList.get(i).getOpcode().equals("RET")) {
             System.err.println("last node of " + scope + " is not return");
         }
+    }
+
+    public void buildBasicBlock() {
+        if (codeList.size() == 0) {
+            return;
+        }
+
+        // iterate codeList, mark tail
+        int i = 0;
+        for (; i < codeList.size() - 1; i++) {
+            Code curr = codeList.get(i);
+            Code next = codeList.get(i + 1);
+
+            if (next.isLeader()) {
+                curr.markAsTail();
+            }
+        }
+        // last one
+        codeList.get(i).markAsTail();
     }
 
     public Code lookUpTargetByLabel(String label) {

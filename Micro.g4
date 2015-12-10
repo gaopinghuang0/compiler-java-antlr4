@@ -103,10 +103,16 @@ assign_expr       : id ASSIGN expr {
             System.out.println("in assign_expr"+$expr.text);
         }
         String var = currTable.lookUpVar($id.text);
-        List cl = currTable.getCodeList();
-        Code c = (Code)cl.get(cl.size()-1);
-        Code code = new TwoAddressCode(opcode, c.getResult(), var, type);
+        String result = currTable.lookUpVar($expr.text);
+
+        if (result == null) {
+            List cl = currTable.getCodeList();
+            Code c = (Code)cl.get(cl.size()-1);
+            result = c.getResult();
+        }
+
         // non-auto-increment, use addCode
+        Code code = new TwoAddressCode(opcode, result, var, type);
         currTable.addCode(code);
     };
 read_stmt
