@@ -208,7 +208,7 @@ public class TinyCode {
             if (type.equals("INT")) {
                 System.out.println("cmpi " + reg1 + " " + reg2);
             } else if (type.equals("FLOAT")) {
-                System.out.println("cmpr" + reg1 + " " + reg2);
+                System.out.println("cmpr " + reg1 + " " + reg2);
             }
             checkRegLive(liveness);
 
