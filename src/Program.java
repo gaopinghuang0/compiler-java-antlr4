@@ -105,7 +105,6 @@ public class Program implements SymbolTable {
         this.decls.add(e);
     }
 
-
     public boolean isContained(ArrayList<SymbolEntry> decls, SymbolEntry entry) {
         for (SymbolEntry d : decls) {
             if (d.getName().equals(entry.getName()) && d.getType().equals(entry.getType())) {
@@ -134,12 +133,13 @@ public class Program implements SymbolTable {
     }
 
     public void printDecl() {
-        // System.out.println("Symbol table "+scope);
         for (SymbolEntry se : this.getDecls()) {
             if (se.getType().equals("STRING")) {
                 System.out.println("str " + se.getName() + " " + se.getVariable() +" " + se.getValue());
             } else {
-//                System.out.println("var " + " " + se.getVariable() + " " + se.getName());
+                if (se.getVariable().equals(se.getName())) {
+                    System.out.println("var " + se.getVariable());
+                }
             }
         }
     }
@@ -224,7 +224,13 @@ public class Program implements SymbolTable {
 
     @Override
     public void addDeclEntry(String name, String type) {
-        String variable = getNextDeclId();
+        String variable;
+        if (this.getScope().equals("GLOBAL")) {
+            variable = name;
+        } else {
+            variable = getNextDeclId();
+        }
+
         SymbolEntry se = new SymbolEntry(name, type, "", variable);
         addElement(se);
     }

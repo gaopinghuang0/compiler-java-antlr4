@@ -167,13 +167,13 @@ public class TinyCode {
             dbgPrint(";" + c + " "+liveness);
             reg1 = regEnsure(c, op1, liveness);
             reg2 = regAllocate(c, result, liveness);
+            addDirty(result);
             if (reg2.equals(reg1)) {
                 dbgPrint(";Switching owner of register " + reg2 + " to " + result);
             } else {
                 System.out.println("move " + reg1 + " " + reg2);
             }
             checkRegLive(liveness);
-            addDirty(result);
             //System.out.println("move " + getTinyTransform(op1) + " " + getTinyTransform(result));
             if (c.isTail()) {
                 spillAllReg();
@@ -196,8 +196,8 @@ public class TinyCode {
             reg2 = regEnsure(c, op2, liveness);
             reg3 = switchReg(op1, result, liveness);
             System.out.println(getTinyOpcode(op) + " " + reg2 + " " + reg3);
-            checkRegLive(liveness);
             addDirty(result);
+            checkRegLive(liveness);
             if (c.isTail()) {
                 spillAllReg();
             }
@@ -223,7 +223,7 @@ public class TinyCode {
 
     public String regEnsure(Code c, String op, Set<String> liveness) {
         // check if opr already has regiser
-        if (!op.startsWith("$")) return op;
+        if (op.isEmpty() || !op.startsWith("$") && !Character.isLetter(op.charAt(0))) return op;
 
         for (String key : map.keySet()) {
             String value = map.get(key);
@@ -233,7 +233,6 @@ public class TinyCode {
                 return key;
             }
         }
-
 
         // reg not found, allocate a reg for op
         // if op is not result, we need to load it to reg

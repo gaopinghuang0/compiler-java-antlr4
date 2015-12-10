@@ -64,6 +64,7 @@ func_decl
         currTable = new Function(currTable);
     } FUNCTION any_type id {
         String type = $any_type.text;
+        currTable.setScope($id.text);
         OneAddressCode code1 = new OneAddressCode("LABEL", $id.text, type);
         OneAddressCode code2 = new OneAddressCode("LINK", "", type);
         currTable.addCode(code1);
@@ -79,7 +80,6 @@ func_decl
             currTable.addCode(endCode);
         }
 
-        currTable.setScope($id.text);
         currTable.getParent().addChild(currTable);
         currTable = symbolStack.pop();
     };
