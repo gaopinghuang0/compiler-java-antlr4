@@ -39,7 +39,7 @@ BEGIN
 		WRITE(third);
 		READ(c);
 
-		d := multiply(a,b) + addTest(a, b);
+		d := multiply(a,b) + 2*addTest(a, b)*0.5;
 		WRITE(d, eol);
 
 		d := 2.0;

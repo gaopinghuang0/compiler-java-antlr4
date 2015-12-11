@@ -225,7 +225,7 @@ factor_prefix  returns [Code code]
         }
         if ($fp.code != null) {
             //TODO: re-check this later: whether need to append to local codeList?
-            currTable.addThreeAddressCode($fp.code.getOpcode(), $fp.code.getResult(),$postfix_expr.code.getResult(), type);
+            $code = currTable.addThreeAddressCode($fp.code.getOpcode(), $fp.code.getResult(),$postfix_expr.code.getResult(), type);
             $code = new OneAddressCode(op, $code.getResult(), type);
         } else {
             //TODO: re-check this later: whether need to append to local codeList?
