@@ -51,6 +51,10 @@ BEGIN
                 result := 0;
             FI
 		FI
+
+		WRITE (test, eol);  -- should be 1
+		WRITE (testGlobal, eol);  -- should be 4
+
 		WRITE(result,eol);
 		RETURN 0;
 	END

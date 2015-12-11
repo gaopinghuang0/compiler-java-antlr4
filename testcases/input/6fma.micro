@@ -22,6 +22,11 @@ BEGIN
 		result := a*b;
 		RETURN result;
 	END
+
+	FUNCTION FLOAT addTest (FLOAT a, FLOAT b)
+	BEGIN
+		RETURN add(a+1-1, multiply(0.5, 2*b));
+	END
 	
 	FUNCTION INT main ()
 	BEGIN
@@ -33,8 +38,12 @@ BEGIN
 		READ(b);
 		WRITE(third);
 		READ(c);
+
+		d := multiply(a,b) + addTest(a, b);
+		WRITE(d, eol);
+
 		d := 2.0;
-		addresult := add(multiply(a,b), multiply(c, add(0, multiply(0.5, d))));
+		addresult := add(multiply(a,b), multiply(c, add(0, multiply(0.5, d) + add(0,2) -2)));
 		WRITE(a,star,b,plus,c,equal,addresult,eol);
 		RETURN 0;
 	END

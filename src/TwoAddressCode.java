@@ -24,10 +24,9 @@ public class TwoAddressCode extends Code {
         return opcode + " " + op1 + " " + result;
     }
 
-    public List<String> getOpArray(){
+    public List<String> getOpArray() {
         List<String> list = new ArrayList<>();
         list.add(this.op1);
-//        list.add(this.result);
         return list;
     }
 }

@@ -163,6 +163,7 @@ write_stmt
         String type = $expr.code.getType();
         String op = "";
         String result = $expr.code.getResult();
+        // use the last code in the codeList as the return result
         op = type.equals("INT") ? "STOREI" : "STOREF";
         currTable.addResultAddressCode(op, result, type);
 
@@ -237,7 +238,11 @@ postfix_expr  returns [Code code]
     }
     | call_expr {
         // mock a code for global codeList, no real use
-        $code = new OneAddressCode("RETURN", "$"+"XX", "INT");
+        //  $code = new OneAddressCode("RETURN", "$"+"XX", "INT");
+
+        // use the last code in codeList
+        int size = currTable.getCodeList().size();
+        $code = currTable.getCodeList().get(size-1);
     };
 call_expr : id LPAREN {
     // use a stack to handle nested call expr list

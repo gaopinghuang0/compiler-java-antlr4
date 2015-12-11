@@ -29,7 +29,6 @@ public class ThreeAddressCode extends Code {
         List<String> list = new ArrayList<>();
         list.add(this.op1);
         list.add(this.op2);
-//        list.add(this.result);
         return list;
     }
 }
