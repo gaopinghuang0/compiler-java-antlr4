@@ -1,0 +1,57 @@
+PROGRAM factorial2
+BEGIN
+	STRING input := "Please enter an integer number: ";
+	STRING eol := "\n";
+	INT testGlobal;
+
+	FUNCTION INT factorial(INT a)
+	BEGIN
+		INT ret;
+		INT tret;
+		IF (a = 1)
+			RETURN 1;
+		ELSE
+			tret := factorial(a-1);
+			ret := tret*a;
+		FI
+		RETURN ret;
+	END
+
+	FUNCTION INT main ()
+	BEGIN
+		INT num;
+		INT result;
+		INT test;
+		WRITE(input);
+		READ(num);
+
+		test := 1;
+		WRITE (test, eol);
+
+		testGlobal := 4;
+		WRITE (testGlobal, eol);
+
+		IF(num = 1)
+			INT test;
+			test := 2;
+			WRITE (test, eol);
+
+			result := 1;
+		ELSE
+            IF(num >1)
+            	INT test, testGlobal;
+            	test := 3;
+            	WRITE (test, eol);
+
+            	testGlobal := 5;
+            	WRITE (testGlobal, eol);
+
+                result := factorial(num); 
+            ELSE
+                result := 0;
+            FI
+		FI
+		WRITE(result,eol);
+		RETURN 0;
+	END
+END
