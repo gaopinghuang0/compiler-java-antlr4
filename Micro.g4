@@ -80,6 +80,12 @@ func_decl
             currTable.addCode(endCode);
         }
 
+
+        // at the end of each function, save and reset localDeclId, staticLocalTemp to 1
+        // so that both function-level and block-level localDeclId and staticLocalTemp can
+        // start increasing from 1
+        currTable.saveAndResetId();
+
         currTable.getParent().addChild(currTable);
         currTable = symbolStack.pop();
     };
@@ -302,6 +308,10 @@ mulop             : '*' | '/';
 /* Complex Statements and Condition */
 if_stmt
     : {
+        symbolStack.push(currTable);
+        currTable = new Block(currTable);
+        currTable.setScope("BLOCK");
+
         graphStack.push(currGraph);
         currGraph = new IfGraph();
     } IF LPAREN cond RPAREN decl stmt_list {
@@ -314,6 +324,11 @@ if_stmt
         OneAddressCode endCode = new OneAddressCode("LABEL", currGraph.getOutLabel(), "labelType");
         currTable.addCode(endCode);
         currGraph = graphStack.pop();
+
+        // important, append all if-block-level codes to its parent codeList
+        currTable.getParent().appendToCodeList(currTable.getCodeList());
+        currTable.getParent().addChild(currTable);
+        currTable = symbolStack.pop();
     };
 else_part
     : ELSE decl stmt_list {
@@ -338,7 +353,11 @@ incr_stmt         : assign_expr | /* empty */;
 
 /* ECE 573 students use this version of for_stmt */
 for_stmt
-    : FOR LPAREN init_stmt {
+    : FOR {
+        symbolStack.push(currTable);
+        currTable = new Block(currTable);
+        currTable.setScope("BLOCK");
+    } LPAREN init_stmt {
         graphStack.push(currGraph);
         currGraph = new ForGraph();
         OneAddressCode topCode = new OneAddressCode("LABEL", currGraph.getTopLabel(), "labelType");
@@ -365,6 +384,11 @@ for_stmt
        currTable.addCode(new OneAddressCode("JUMP", currGraph.getTopLabel(), "labelType"));
        currTable.addCode(new OneAddressCode("LABEL", currGraph.getOutLabel(), "labelType"));
        currGraph = graphStack.pop();
+
+       // important, append all for-block-level codes to its parent codeList
+       currTable.getParent().appendToCodeList(currTable.getCodeList());
+       currTable.getParent().addChild(currTable);
+       currTable = symbolStack.pop();
     };
 
 /* CONTINUE and BREAK statements. ECE 573 students only */
@@ -382,6 +406,10 @@ aug_stmt          : base_stmt | aug_if_stmt | for_stmt | CONTINUE SEMI {
 /* Augmented IF statements for ECE 573 students */
 aug_if_stmt
     : {
+        symbolStack.push(currTable);
+        currTable = new Block(currTable);
+        currTable.setScope("BLOCK");
+
         graphStack.push(currGraph);
         currGraph = new IfGraph();
     } IF LPAREN cond RPAREN decl aug_stmt_list {
@@ -391,15 +419,29 @@ aug_if_stmt
         midCode = new OneAddressCode("LABEL", currGraph.getTopLabel(), "labelType");
         currTable.addCode(midCode);
     } aug_else_part FI {
-      // out label
+        // out label
         OneAddressCode endCode = new OneAddressCode("LABEL", currGraph.getOutLabel(), "labelType");
         currTable.addCode(endCode);
         currGraph = graphStack.pop();
+
+        // important, append all for-block-level codes to its parent codeList
+        currTable.getParent().appendToCodeList(currTable.getCodeList());
+        currTable.getParent().addChild(currTable);
+        currTable = symbolStack.pop();
     };
 aug_else_part
-    : ELSE decl aug_stmt_list {
+    : ELSE {
+         symbolStack.push(currTable);
+         currTable = new Block(currTable);
+         currTable.setScope("BLOCK");
+    }  decl aug_stmt_list {
         // end of else_part, jump to out label
         currTable.addCode(new OneAddressCode("JUMP", currGraph.getOutLabel(), "labelType"));
+
+        // important, append all for-block-level codes to its parent codeList
+        currTable.getParent().appendToCodeList(currTable.getCodeList());
+        currTable.getParent().addChild(currTable);
+        currTable = symbolStack.pop();
     }| /* empty */;
 
 

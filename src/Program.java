@@ -10,9 +10,10 @@ public class Program implements SymbolTable {
     private ArrayList<SymbolTable> children = new ArrayList<>();
     private int paramId = 1;
     private int declId = 1;
+    private static int localDeclId = 1;
     private int localTemp = 1;
+    private static int staticLocalTemp = 1;
     private List<Code> codeList = new ArrayList<>();
-    private List<SymbolEntry> callExprList = new ArrayList<>();
     public String getScope() {
         return scope;
     }
@@ -29,7 +30,15 @@ public class Program implements SymbolTable {
     public int getLocalTemp() {return this.localTemp;}
     @Override
     public int getDeclId(){
-        return this.declId;
+        return declId;
+    }
+
+    public void saveAndResetId() {
+        declId = localDeclId;
+        localTemp = staticLocalTemp;
+        // at the end of each function, reset them to 1
+        localDeclId = 1;
+        staticLocalTemp = 1;
     }
 
     public ArrayList<SymbolTable> getChildren() {
@@ -41,8 +50,8 @@ public class Program implements SymbolTable {
         return codeList;
     }
 
-    public void setCodeList(List<Code> codeList) {
-        this.codeList = codeList;
+    public void appendToCodeList(List<Code> newCodeList) {
+        this.codeList.addAll(newCodeList);
     }
 
     @Override
@@ -207,11 +216,11 @@ public class Program implements SymbolTable {
     }
 
     public String getNextDeclId() {
-        return "$L" + declId++;
+        return "$L" + localDeclId++;
     }
 
     public String getNextLocalTemp() {
-        return "$T" + localTemp++;
+        return "$T" + staticLocalTemp++;
     }
 
 
@@ -225,6 +234,7 @@ public class Program implements SymbolTable {
     @Override
     public void addDeclEntry(String name, String type) {
         String variable;
+
         if (this.getScope().equals("GLOBAL")) {
             variable = name;
         } else {
@@ -320,7 +330,9 @@ public class Program implements SymbolTable {
             if (Arrays.asList(Compop.IRop).contains(curr.getOpcode()) ||
                     curr.getOpcode().equals("JUMP")) {
                 String label = curr.getResult();
+
                 Code target = lookUpTargetByLabel(label);
+
                 target.addPredecessor(curr);
                 curr.addSuccessor(target);
 
@@ -332,7 +344,7 @@ public class Program implements SymbolTable {
         }
 
         // last node (return node), no successor
-        if (!codeList.get(i).getOpcode().equals("RET")) {
+        if (!codeList.get(i).getOpcode().equals("RET") && !scope.equals("BLOCK")) {
             System.err.println("last node of " + scope + " is not return");
         }
     }

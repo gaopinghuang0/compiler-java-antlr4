@@ -65,7 +65,9 @@ public class Micro {
         table.printIR();
 
         for (SymbolTable st : table.getChildren()) {
-            printIRcode(st);
+            if (st.getClass() != Block.class) {
+                printIRcode(st);
+            }
         }
     }
 
@@ -73,7 +75,9 @@ public class Micro {
         table.doLivenessAnalysis(globalTemp);
 
         for (SymbolTable st : table.getChildren()) {
-            updateLiveness(st, globalTemp);
+            if (st.getClass() != Block.class) {
+                updateLiveness(st, globalTemp);
+            }
         }
     }
 
@@ -99,11 +103,15 @@ public class Micro {
     }
 
     private static void printTinyCode(SymbolTable table) {
-        table.printTiny(table.getParamId(),table.getLocalTemp() ,table.getDeclId());
+        table.printTiny(table.getParamId(), table.getLocalTemp(), table.getDeclId());
 
         for (SymbolTable st : table.getChildren()) {
-            printTinyCode(st);
-            System.out.println(";Spilling registers at the end of the Basic Block");
+            // do not print block-level codeList since its code is already
+            // appended to function-level codeList
+            if (st.getClass() != Block.class) {
+                printTinyCode(st);
+                System.out.println(";Spilling registers at the end of the Basic Block");
+            }
         }
     }
 }

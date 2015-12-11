@@ -14,6 +14,8 @@ public interface SymbolTable {
     int getLocalTemp();
     void addElement(SymbolEntry e);
     void addChild(SymbolTable func);
+    void appendToCodeList(List<Code> newCodeList);
+    void saveAndResetId();
     void printTable();
     void printIR();
     void printCodeOut();
